@@ -1,8 +1,0 @@
-*.md
-*.pyc
-.coverage
-.mypy_cache
-.pytest_cache
-.ruff_cache
-.venv
-Dockerfile*

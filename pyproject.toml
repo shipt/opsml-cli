@@ -1,163 +1,20 @@
-[tool.poetry]
-name = "poetry-template"
-version = "2023.05.22"
-description = ""
-authors = ["your team <@your-team-here>"]
-
 [tool.poetry.dependencies]
-python = ">=3.10.11,<3.11"
-pyshipt = "^3.5.0"
-
-[tool.poetry.group.dev.dependencies]
-black = "^23.3.0"
-coverage = {version = "^7.2.5", extras = ["toml"]}
-darglint = "^1.8.1"
-flake8 = "^6.0.0"
-isort = "^5.12.0"
-mypy = "^1.3.0"
-pep8-naming = "<1.0.0"
-pylint = "^2.17.4"
-pytest = "^7.3.1"
-pytest-cov = "^4.0.0"
-requests = "^2.30.0"
-ruff = "<1.0.0"
-types-requests = "^2.30.0"
-
-[[tool.poetry.source]]
-# Access Shipt's private Artifactory remote PyPi repository. It serves as a caching proxy.
-# Generate Identity Token in Artifactory and use it as password and then have these ENV's set:
-# export POETRY_HTTP_BASIC_SHIPT_RESOLVE_USERNAME=${ARTIFACTORY_PYPI_USERNAME}
-# export POETRY_HTTP_BASIC_SHIPT_RESOLVE_PASSWORD=${ARTIFACTORY_PYPI_PASSWORD}
-name = "shipt-resolve"
-url = "https://artifactory.gcp.shipttech.com/artifactory/api/pypi/pypi-virtual/simple"
-priority = "default"
-
-# [[tool.poetry.source]]
-# Please use drone artifactory-poetry-publish step to publish packages.
-# name = "shipt-deploy"
-# url = "https://artifactory.gcp.shipttech.com/artifactory/api/pypi/pypi-local"
-# priority = "explicit"
-
-[tool.black]
-line-length = 120
-target-version = ['py310']
-include = '\.pyi?$'
-
-[tool.coverage.paths]
-source = ["poetry_template", "*/site-packages"]
-
-[tool.coverage.run]
-branch = true
-source = ["poetry_template"]
-
-[tool.coverage.report]
-show_missing = true
-fail_under = 90
-
-[tool.darglint]
-# Just a doc placeholder see setup.cfg
-# ignore private methods
-ignore_regex = "^_(.*)"
-# one liners are ok, longer pls doc everything
-strictness = "short"
-
-[tool.isort]
-profile = "black"
-line_length = 120
-
-[tool.flake8]
-# This section is just a doc placeholder..see setup.cfg
-#   https://gitlab.com/pycqa/flake8/-/issues/428#note_251982786
-max-complexity = 10
-format = "pylint"
-statistics = "True"
-max-line-length = 120
-# ignore non-PEP8 lints
-ignore = ["E203", "W503"]
-
-[tool.pytest.ini_options]
-log_cli = true
-log_cli_level = "INFO"
-
-[tool.mypy]
-# platform configuration
-python_version = "3.10"
-platform = "linux"
-mypy_path = "stubs"
-#plugins = [
-#    "numpy.typing.mypy_plugin",
-#    "pydantic.mypy",
-#]
-
-# dynamic typing - uncomment for stricter typing
-#disallow_any_decorated = true
-#disallow_any_explicit = true
-#disallow_any_expr = true
-## disallow_any_generics = true, included in strict
-#disallow_any_unimported = true
-## disallow_subclassing_any = true, included in strict
-
-# warnings
-warn_unreachable = true
-
-# miscellaneous strictness
-strict = true
-
-# error messages
-pretty = true
-
-# advanced - uncomment for stricter typing
-#warn_incomplete_stub = true
-
-[tool.pylint.basic]
-# just allow short names
-argument-rgx = "^[_a-z][_a-z0-9]{0,30}$"
-variable-rgx = "^[_a-z][_a-z0-9]{0,30}$"
-max-line-length = 120
-
-[tool.pylint.master]
-# additional checks via plugins
-load-plugins = [
-#    "pylint.extensions.bad_builtin",
-#    "pylint.extensions.broad_try_clause",
-#    "pylint.extensions.code_style",
-#    "pylint.extensions.comparetozero",
-#    "pylint.extensions.comparison_placement",
-#    "pylint.extensions.check_elif",
-#    "pylint.extensions.confusing_elif",
-#    "pylint.extensions.consider_ternary_expression",
-#    "pylint.extensions.docparams",
-    "pylint.extensions.docstyle",
-    "pylint.extensions.empty_comment",
-    "pylint.extensions.emptystring",
-    "pylint.extensions.eq_without_hash",
-    "pylint.extensions.for_any_all",
-    "pylint.extensions.mccabe",
-    "pylint.extensions.overlapping_exceptions",
-    "pylint.extensions.private_import",
-    "pylint.extensions.redefined_variable_type",
-#    "pylint.extensions.set_membership",
-    "pylint.extensions.typing",
-#    "pylint.extensions.while_used",
-]
-
-[tool.pylint.messages_control]
-disable = [
-    "design",
-    "duplicate-code",
-    "fixme",
-    "missing-class-docstring",
-    "missing-function-docstring",
-    "missing-module-docstring",
-    "too-many-nested-blocks",
-]
-#extension-pkg-whitelist = [
-#     "pydantic"
-#]
-
-[tool.ruff]
-line-length = 120
+python = "^3.10"
+maturin = {extras = ["patchelf"], version = "^1.2.0"}
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+requires = ["maturin>=1.2,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+bindings = "bin" 
+strip = true 
+
+[project]
+name = "opsml-cli"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Rust",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Programming Language :: Python :: Implementation :: PyPy",
+]
