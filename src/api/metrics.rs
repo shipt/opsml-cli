@@ -190,7 +190,7 @@ mod tests {
         let mut metrics = HashMap::new();
         metrics.insert("test".to_string(), vec);
 
-        let mock_response = types::ListMetricResponse { metrics: metrics };
+        let mock_response = types::ListMetricResponse { metrics };
         let string_response = serde_json::to_string(&mock_response).unwrap();
 
         let metric_table = parse_metric_response(&string_response);
@@ -252,7 +252,7 @@ mod tests {
         let compare_response = types::CompareMetricResponse {
             challenger_name: "hootie-and-the-blowfish".to_string(),
             challenger_version: "1.0.0".to_string(),
-            report: report,
+            report,
         };
         let string_response = serde_json::to_string(&compare_response).unwrap();
 
