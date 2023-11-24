@@ -91,6 +91,13 @@ pub async fn make_post_request<T: Serialize>(url: &str, payload: &T) -> Response
     return client.post(parsed_url).json(payload).send().await.unwrap();
 }
 
+pub async fn make_get_request(url: &str) -> Response {
+    let parsed_url = reqwest::Url::parse(url).unwrap();
+    let client = reqwest::Client::new();
+
+    return client.get(parsed_url).send().await.unwrap();
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
