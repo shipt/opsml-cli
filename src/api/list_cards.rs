@@ -15,10 +15,10 @@ use tabled::{settings::Alignment, Table};
 fn validate_registry(registry: &str) -> String {
     // Determines correct  registry to use
 
-    let registries = vec!["data", "model", "run", "pipeline", "audit", "project"];
+    let registries = ["data", "model", "run", "pipeline", "audit", "project"];
 
     if registries.contains(&registry) {
-        return registry.to_string();
+        registry.to_string()
     } else {
         panic!(
             "Invalid registry {}. Accepted registry names include 
@@ -61,7 +61,7 @@ fn parse_list_response(response: &str) -> String {
         .with(Style::sharp())
         .to_string();
 
-    return list_table;
+    list_table
 }
 
 /// List cards
@@ -80,6 +80,7 @@ fn parse_list_response(response: &str) -> String {
 /// * `max_date` - Max date
 ///
 #[tokio::main]
+#[allow(clippy::too_many_arguments)]
 pub async fn list_cards(
     registry: &str,
     name: Option<&str>,
@@ -96,7 +97,7 @@ pub async fn list_cards(
 
     // create empty dict for tags
     let mut tags: HashMap<String, String> = HashMap::new();
-    validate_registry(&registry);
+    validate_registry(registry);
 
     if tag_name.is_some() && tag_value.is_some() {
         tags = tag_name
@@ -112,11 +113,11 @@ pub async fn list_cards(
         name: name.map(|s| s.to_string()),
         team: team.map(|s| s.to_string()),
         version: version.map(|s| s.to_string()),
-        limit: limit,
+        limit,
         uid: uid.map(|s| s.to_string()),
         tags: Some(tags),
         max_date: max_date.map(|s| s.to_string()),
-        ignore_release_candidates: ignore_release_candidates,
+        ignore_release_candidates,
     };
 
     let response =

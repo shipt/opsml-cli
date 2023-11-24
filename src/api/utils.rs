@@ -6,8 +6,8 @@ use std::env;
 lazy_static! {
     static ref OPSML_TRACKING_URI: String = match env::var("OPSML_TRACKING_URI") {
         Ok(val) =>
-            if val.ends_with("/") {
-                remove_suffix(&val, "/")
+            if val.ends_with('/') {
+                remove_suffix(&val, '/')
             } else {
                 val
             },
@@ -26,21 +26,18 @@ pub enum OpsmlPaths {
 impl OpsmlPaths {
     pub fn as_str(&self) -> String {
         match self {
-            OpsmlPaths::ListCard => format!("{}/opsml/cards/list", OPSML_TRACKING_URI.to_string()),
+            OpsmlPaths::ListCard => format!("{}/opsml/cards/list", *OPSML_TRACKING_URI),
             OpsmlPaths::MetadataDownload => {
-                format!("{}/opsml/models/metadata", OPSML_TRACKING_URI.to_string())
+                format!("{}/opsml/models/metadata", *OPSML_TRACKING_URI)
             }
             OpsmlPaths::Download => {
-                format!("{}/opsml/files/download", OPSML_TRACKING_URI.to_string())
+                format!("{}/opsml/files/download", *OPSML_TRACKING_URI)
             }
             OpsmlPaths::Metric => {
-                format!("{}/opsml/models/metrics", OPSML_TRACKING_URI.to_string())
+                format!("{}/opsml/models/metrics", *OPSML_TRACKING_URI)
             }
             OpsmlPaths::CompareMetric => {
-                format!(
-                    "{}/opsml/models/compare_metrics",
-                    OPSML_TRACKING_URI.to_string()
-                )
+                format!("{}/opsml/models/compare_metrics", *OPSML_TRACKING_URI)
             }
         }
     }
@@ -51,7 +48,7 @@ pub async fn check_args(
     version: &Option<String>,
     uid: &Option<String>,
 ) -> Result<(), String> {
-    let common_args = vec![name, version];
+    let common_args = [name, version];
     let has_common = common_args.iter().all(|i| i.is_none());
 
     let has_uid = uid.is_none();
@@ -70,7 +67,7 @@ pub async fn check_args(
 /// * `s` - A string slice
 /// * `suffix` - A string slice
 ///
-pub fn remove_suffix<'a>(s: &str, suffix: &str) -> String {
+pub fn remove_suffix(s: &str, suffix: char) -> String {
     match s.strip_suffix(suffix) {
         Some(s) => s.to_string(),
         None => s.to_string(),
@@ -88,14 +85,14 @@ pub async fn make_post_request<T: Serialize>(url: &str, payload: &T) -> Response
     let parsed_url = reqwest::Url::parse(url).unwrap();
     let client = reqwest::Client::new();
 
-    return client.post(parsed_url).json(payload).send().await.unwrap();
+    client.post(parsed_url).json(payload).send().await.unwrap()
 }
 
 pub async fn make_get_request(url: &str) -> Response {
     let parsed_url = reqwest::Url::parse(url).unwrap();
     let client = reqwest::Client::new();
 
-    return client.get(parsed_url).send().await.unwrap();
+    client.get(parsed_url).send().await.unwrap()
 }
 
 #[cfg(test)]
@@ -106,8 +103,8 @@ mod tests {
     fn test_remove_suffix() {
         let test_uri_with_slash = "http://localhost:8080/";
         let test_uri_without_slash = "http://localhost:8080";
-        let processed_with_slash_uri = remove_suffix(&test_uri_with_slash, "/");
-        let processed_without_slash_uri = remove_suffix(&test_uri_without_slash, "/");
+        let processed_with_slash_uri = remove_suffix(&test_uri_with_slash, '/');
+        let processed_without_slash_uri = remove_suffix(&test_uri_without_slash, '/');
         assert_eq!(processed_with_slash_uri, "http://localhost:8080");
         assert_eq!(processed_without_slash_uri, test_uri_without_slash);
     }

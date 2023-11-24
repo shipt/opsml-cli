@@ -30,8 +30,8 @@ fn parse_metric_response(response: &str) -> String {
             metric_table.push(types::MetricTable {
                 metric: metric.name.clone(),
                 value: metric.value.clone(),
-                step: step,
-                timestamp: timestamp,
+                step,
+                timestamp,
             });
         }
     }
@@ -41,7 +41,7 @@ fn parse_metric_response(response: &str) -> String {
         .with(Style::sharp())
         .to_string();
 
-    return metric_table;
+    metric_table
 }
 
 fn parse_compare_metric_response(response: &str) -> String {
@@ -77,7 +77,7 @@ fn parse_compare_metric_response(response: &str) -> String {
                     challenger_metric.value.to_string(),
                 ];
 
-                if report.challenger_win == true {
+                if report.challenger_win {
                     record.append(&mut vec!["true".green().to_string()]);
                 } else {
                     record.append(&mut vec!["false".red().to_string()]);
@@ -94,7 +94,7 @@ fn parse_compare_metric_response(response: &str) -> String {
         .with(Style::sharp())
         .to_string();
 
-    return compare_metric_table;
+    compare_metric_table
 }
 
 /// List all metrics for a model
@@ -133,17 +133,17 @@ pub async fn get_model_metrics(
 
 #[tokio::main]
 pub async fn compare_model_metrics(
-    metric_name: &Vec<String>,
-    lower_is_better: &Vec<bool>,
+    metric_name: &[String],
+    lower_is_better: &[bool],
     challenger_uid: &str,
-    champion_uid: &Vec<String>,
+    champion_uid: &[String],
 ) -> Result<(), reqwest::Error> {
     // set up repair request
     let compare_metric_request = types::CompareMetricRequest {
-        metric_name: metric_name.clone(),
-        lower_is_better: lower_is_better.clone(),
+        metric_name: metric_name.to_owned(),
+        lower_is_better: lower_is_better.to_owned(),
         challenger_uid: challenger_uid.to_string(),
-        champion_uid: champion_uid.clone(),
+        champion_uid: champion_uid.to_owned(),
     };
 
     let response = utils::make_post_request(
