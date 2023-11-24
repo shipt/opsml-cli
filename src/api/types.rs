@@ -13,6 +13,7 @@ pub struct ListTableRequest {
     pub limit: Option<i16>,
     pub tags: Option<HashMap<String, String>>,
     pub max_date: Option<String>,
+    pub ignore_release_candidates: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -20,6 +21,14 @@ pub struct CardRequest {
     pub name: Option<String>,
     pub version: Option<String>,
     pub uid: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct ModelMetadataRequest {
+    pub name: Option<String>,
+    pub version: Option<String>,
+    pub uid: Option<String>,
+    pub ignore_release_candidates: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

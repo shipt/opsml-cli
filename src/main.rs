@@ -69,6 +69,7 @@ fn main() -> Result<(), String> {
                 args.tag_name.clone(),
                 args.tag_value.clone(),
                 args.max_date.as_deref(),
+                args.ignore_release_candidates.clone(),
             );
 
             match response {
@@ -84,6 +85,7 @@ fn main() -> Result<(), String> {
                 args.version.clone(),
                 args.uid.clone(),
                 &args.write_dir.clone(),
+                args.ignore_release_candidates.clone(),
             )?;
             Ok(())
         }
@@ -96,6 +98,7 @@ fn main() -> Result<(), String> {
                 &args.write_dir.clone(),
                 args.no_onnx.clone(),
                 args.onnx.clone(),
+                args.ignore_release_candidates.clone(),
             )?;
             Ok(())
         }

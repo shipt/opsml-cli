@@ -90,6 +90,7 @@ pub async fn list_cards(
     tag_name: Option<Vec<String>>,
     tag_value: Option<Vec<String>>,
     max_date: Option<&str>,
+    ignore_release_candidates: bool,
 ) -> Result<(), reqwest::Error> {
     // set full path and table name
 
@@ -115,6 +116,7 @@ pub async fn list_cards(
         uid: uid.map(|s| s.to_string()),
         tags: Some(tags),
         max_date: max_date.map(|s| s.to_string()),
+        ignore_release_candidates: ignore_release_candidates,
     };
 
     let response =
