@@ -353,8 +353,10 @@ mod tests {
         let mut server = mockito::Server::new();
         let url = server.url();
         let path = "./src/api/test_utils/metadata_onnx.json";
-        let payload = types::ModelDownloadRequest {
-            read_path: "mock_path".to_string(),
+        let payload = types::CardRequest {
+            name: Some("test".to_string()),
+            version: Some("test".to_string()),
+            uid: Some("test".to_string()),
         };
 
         // Create a mock server

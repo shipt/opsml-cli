@@ -32,11 +32,6 @@ pub struct ModelMetadataRequest {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ModelDownloadRequest {
-    pub read_path: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 pub struct Card {
     pub name: String,
     pub team: String,
