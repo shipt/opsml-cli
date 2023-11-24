@@ -18,3 +18,8 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
+
+[project.urls]
+"Homepage" = "https://github.com/shipt/opsml-cli"
+"Source Code" = "https://github.com/shipt/opsml-cli"
+"Issues" = "https://github.com/shipt/opsml-cli/issues"
