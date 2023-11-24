@@ -98,11 +98,8 @@ async fn download_model_file(
     model_uri: &str,
     local_save_path: &str,
 ) -> Result<(), String> {
-    let payload = types::ModelDownloadRequest {
-        read_path: model_uri.to_string(),
-    };
-
-    let response = utils::make_post_request(&url, &payload).await;
+    let model_url = format!("{}?read_path={}", url, model_uri);
+    let response = utils::make_get_request(&model_url).await;
     let filepath = Path::new(local_save_path);
 
     download_stream_to_file(response, filepath).await?;
@@ -367,6 +364,26 @@ mod tests {
 
         let full_path: String = format!("{}/fake", &url);
         let response = utils::make_post_request(&full_path, &payload).await;
+
+        assert_eq!(response.status(), 201);
+        mock.assert();
+    }
+
+    #[tokio::test]
+    async fn test_make_get_request() {
+        let mut server = mockito::Server::new();
+        let url = server.url();
+        let path = "./src/api/test_utils/metadata_onnx.json";
+
+        // Create a mock server
+        let mock = server
+            .mock("get", "/fake")
+            .with_status(201)
+            .with_body_from_file(path)
+            .create();
+
+        let full_path: String = format!("{}/fake", &url);
+        let response = utils::make_get_request(&full_path).await;
 
         assert_eq!(response.status(), 201);
         mock.assert();
