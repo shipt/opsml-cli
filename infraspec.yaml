@@ -1,5 +1,5 @@
 language: python
-team: # input a valid team here. Check with #ask-site-reliabiliy if you don't have a team
+team: devops-ml
 deploy:
   group: ml
   chart: default
