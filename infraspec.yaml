@@ -1,0 +1,33 @@
+language: python
+team: # input a valid team here. Check with #ask-site-reliabiliy if you don't have a team
+deploy:
+  group: ml
+  chart: default
+  pipeline: harbor
+  environments:
+  - name: production
+    disabled: true # remove this line when you are ready to push to production
+    releaseStrategy:
+      tagFormat: semver
+  - name: staging
+    disabled: true # remove this line when you are ready to push to staging
+    releaseStrategy:
+      branch: main
+  deployLocations:
+    - provider: gcp
+      region: us-central1
+    - provider: gcp
+      region: us-east4
+roles:
+  webserver:
+    command: ""
+    healthcheck: /healthz
+    timeout: 100s
+    telemetry:
+      graphite:
+        enabled: false
+## Uncomment if you plan on deploying
+# datastores: 
+#   cloudStorage:
+#     - name: bucket
+#       configVar: GCP_BUCKET
