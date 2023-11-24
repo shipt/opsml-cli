@@ -65,11 +65,11 @@ fn main() -> Result<(), String> {
                 args.team.as_deref(),
                 args.version.as_deref(),
                 args.uid.as_deref(),
-                args.limit.clone(),
+                args.limit,
                 args.tag_name.clone(),
                 args.tag_value.clone(),
                 args.max_date.as_deref(),
-                args.ignore_release_candidates.clone(),
+                args.ignore_release_candidates,
             );
 
             match response {
@@ -84,8 +84,8 @@ fn main() -> Result<(), String> {
                 args.name.clone(),
                 args.version.clone(),
                 args.uid.clone(),
-                &args.write_dir.clone(),
-                args.ignore_release_candidates.clone(),
+                &args.write_dir,
+                args.ignore_release_candidates,
             )?;
             Ok(())
         }
@@ -96,9 +96,9 @@ fn main() -> Result<(), String> {
                 args.version.clone(),
                 args.uid.clone(),
                 &args.write_dir.clone(),
-                args.no_onnx.clone(),
-                args.onnx.clone(),
-                args.ignore_release_candidates.clone(),
+                args.no_onnx,
+                args.onnx,
+                args.ignore_release_candidates,
             )?;
             Ok(())
         }

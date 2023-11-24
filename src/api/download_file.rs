@@ -27,7 +27,7 @@ async fn load_stream_response(response: Response) -> String {
 
         stream_buffer.push_str(string_chunk);
     }
-    return stream_buffer;
+    stream_buffer
 }
 
 /// Downloads a stream to a file
@@ -78,7 +78,7 @@ fn create_dir_path(path: &str) {
 async fn save_metadata_to_json(metadata: &types::ModelMetadata, path: &str) -> Result<(), String> {
     let json_string = serde_json::to_string(metadata).unwrap();
     fs::File::create(path).expect("Unable to create metadata file");
-    fs::write(path, &json_string).expect("Unable to write file");
+    fs::write(path, json_string).expect("Unable to write file");
     Ok(())
 }
 
@@ -129,10 +129,10 @@ async fn get_model_metadata(
     let save_path: String = format!("{}/{}", write_dir, MODEL_METADATA_FILE);
 
     let model_metadata_request = types::ModelMetadataRequest {
-        name: name,
-        version: version,
-        uid: uid,
-        ignore_release_candidates: ignore_release_candidates,
+        name,
+        version,
+        uid,
+        ignore_release_candidates,
     };
 
     let response = utils::make_post_request(
@@ -224,7 +224,7 @@ pub async fn download_model(
     // If no onnx is set to true, we need to cancel out onnx: true
     // Clap does not currently support command line negation flags
 
-    let download_onnx = if onnx && no_onnx { false } else { true };
+    let download_onnx = !(onnx && no_onnx);
     let model_metadata =
         get_model_metadata(name, version, uid, write_dir, ignore_release_candidates).await?;
     let (filename, model_uri) = get_model_uri(download_onnx, &model_metadata);
