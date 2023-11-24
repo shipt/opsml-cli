@@ -253,6 +253,7 @@ mod tests {
     use assert_json_diff::assert_json_eq;
     use std::fs;
     use tokio;
+    use uuid::Uuid;
 
     #[tokio::test]
     async fn test_parse_response() {
@@ -287,21 +288,22 @@ mod tests {
     #[tokio::test]
     async fn test_save_json() -> Result<(), String> {
         // read mock response object
+        let unique_name = Uuid::new_v4().to_string();
         let path = "./src/api/test_utils/metadata_onnx.json";
         let data = fs::read_to_string(path).expect("Unable to read file");
         let mock_metadata_orig: types::ModelMetadata = serde_json::from_str(&data).unwrap();
-        let new_path = "./src/api/test_utils/new_mock_response.json";
+        let new_path = format!("./src/api/test_utils/{}_mock_response.json", unique_name);
 
-        save_metadata_to_json(&mock_metadata_orig, new_path).await?;
+        save_metadata_to_json(&mock_metadata_orig, &new_path).await?;
 
-        let new_data = fs::read_to_string(new_path).expect("Unable to read file");
+        let new_data = fs::read_to_string(&new_path).expect("Unable to read file");
 
         // confirm new json can be loaded in
         let mock_metadata: types::ModelMetadata = serde_json::from_str(&new_data).unwrap();
         assert_json_eq!(mock_metadata, mock_metadata_orig);
 
         // clean up
-        fs::remove_file(new_path).unwrap();
+        fs::remove_file(&new_path).unwrap();
 
         Ok(())
     }
