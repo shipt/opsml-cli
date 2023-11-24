@@ -37,6 +37,10 @@ pub struct ListCards {
     /// max date
     #[arg(long = "max_date")]
     pub max_date: Option<String>,
+
+    /// ignore release candidate
+    #[arg(long = "ignore_release_candidate", default_value = "false")]
+    pub ignore_release_candidates: bool,
 }
 
 #[derive(Args)]
@@ -56,6 +60,10 @@ pub struct ModelMetadataArgs {
     /// Write directory
     #[arg(long = "write-dir", default_value = ".models")]
     pub write_dir: String,
+
+    /// ignore release candidate
+    #[arg(long = "ignore_release_candidate", default_value = "false")]
+    pub ignore_release_candidates: bool,
 }
 
 #[derive(Args)]
@@ -83,6 +91,10 @@ pub struct DownloadModelArgs {
     /// Boolean indicating whether to download onnx or trained model
     #[arg(long = "onnx", default_value = "true")]
     pub onnx: bool,
+
+    /// ignore release candidate
+    #[arg(long = "ignore_release_candidate", default_value = "false")]
+    pub ignore_release_candidates: bool,
 }
 
 #[derive(Args)]

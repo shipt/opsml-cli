@@ -127,13 +127,15 @@ async fn get_model_metadata(
     version: Option<String>,
     uid: Option<String>,
     write_dir: &str,
+    ignore_release_candidates: bool,
 ) -> Result<types::ModelMetadata, String> {
     let save_path: String = format!("{}/{}", write_dir, MODEL_METADATA_FILE);
 
-    let model_metadata_request = types::CardRequest {
+    let model_metadata_request = types::ModelMetadataRequest {
         name: name,
         version: version,
         uid: uid,
+        ignore_release_candidates: ignore_release_candidates,
     };
 
     let response = utils::make_post_request(
@@ -189,10 +191,12 @@ pub async fn download_model_metadata(
     version: Option<String>,
     uid: Option<String>,
     write_dir: &str,
+    ignore_release_candidates: bool,
 ) -> Result<types::ModelMetadata, String> {
     // check args first
     utils::check_args(&name, &version, &uid).await?;
-    let model_metadata = get_model_metadata(name, version, uid, write_dir).await?;
+    let model_metadata =
+        get_model_metadata(name, version, uid, write_dir, ignore_release_candidates).await?;
     Ok(model_metadata)
 }
 
@@ -215,6 +219,7 @@ pub async fn download_model(
     write_dir: &str,
     no_onnx: bool,
     onnx: bool,
+    ignore_release_candidates: bool,
 ) -> Result<(), String> {
     // check args first
     utils::check_args(&name, &version, &uid).await?;
@@ -223,7 +228,8 @@ pub async fn download_model(
     // Clap does not currently support command line negation flags
 
     let download_onnx = if onnx && no_onnx { false } else { true };
-    let model_metadata = get_model_metadata(name, version, uid, write_dir).await?;
+    let model_metadata =
+        get_model_metadata(name, version, uid, write_dir, ignore_release_candidates).await?;
     let (filename, model_uri) = get_model_uri(download_onnx, &model_metadata);
 
     println!("Downloading model: {}, {}", filename, model_uri);
