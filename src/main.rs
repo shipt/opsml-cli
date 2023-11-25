@@ -69,7 +69,7 @@ fn main() -> Result<()> {
     match &cli.command {
         // subcommand for list cards
         Some(Commands::ListCards(args)) => {
-            let response = list_cards(
+            list_cards(
                 args.registry.as_str(),
                 args.name.as_deref(),
                 args.team.as_deref(),
@@ -80,24 +80,22 @@ fn main() -> Result<()> {
                 args.tag_value.clone(),
                 args.max_date.as_deref(),
                 args.ignore_release_candidates,
-            );
-
-            response.with_context(|| "Failed to list cards")?;
+            )
+            .with_context(|| "Failed to list cards")?;
 
             Ok(())
         }
 
         // subcommand for downloading model metadata
         Some(Commands::DownloadModelMetadata(args)) => {
-            let response = download_model_metadata(
+            download_model_metadata(
                 args.name.clone(),
                 args.version.clone(),
                 args.uid.clone(),
                 &args.write_dir,
                 args.ignore_release_candidates,
-            );
-
-            response.with_context(|| {
+            )
+            .with_context(|| {
                 format!(
                     "Failed to download model metadata for {:?}",
                     args.name.clone()
@@ -108,7 +106,7 @@ fn main() -> Result<()> {
         }
         // subcommand for downloading a model
         Some(Commands::DownloadModel(args)) => {
-            let response = download_model(
+            download_model(
                 args.name.clone(),
                 args.version.clone(),
                 args.uid.clone(),
@@ -116,50 +114,43 @@ fn main() -> Result<()> {
                 args.no_onnx,
                 args.onnx,
                 args.ignore_release_candidates,
-            );
-
-            response
-                .with_context(|| format!("Failed to download model for {:?}", args.name.clone()))?;
+            )
+            .with_context(|| format!("Failed to download model for {:?}", args.name.clone()))?;
             Ok(())
         }
         // subcommand for getting model metrics
         Some(Commands::GetModelMetrics(args)) => {
-            let response = get_model_metrics(
+            get_model_metrics(
                 args.name.as_deref(),
                 args.version.as_deref(),
                 args.uid.as_deref(),
-            );
-
-            response
-                .with_context(|| format!("Failed to read instrs from"))
-                .unwrap();
+            )
+            .with_context(|| format!("Failed to get model metrics for {:?}", args.name.clone()))?;
 
             Ok(())
         }
 
         // subcommand for comparing model metrics
         Some(Commands::CompareModelMetrics(args)) => {
-            let response = compare_model_metrics(
+            compare_model_metrics(
                 &args.metric_name,
                 &args.lower_is_better,
                 &args.challenger_uid,
                 &args.champion_uid,
-            );
-
-            response
-                .with_context(|| format!("Failed to read instrs from"))
-                .unwrap();
+            )
+            .with_context(|| {
+                format!(
+                    "Failed to compare model metrics for {:?}",
+                    &args.champion_uid
+                )
+            })?;
 
             Ok(())
         }
 
         // subcommand for launching uvicorn app
         Some(Commands::LaunchUvicornApp(args)) => {
-            let response = launch_app(args.port, args.login);
-
-            response
-                .with_context(|| format!("Failed to read instrs from"))
-                .unwrap();
+            launch_app(args.port, args.login).with_context(|| "Failed to lauch opsml server")?;
 
             Ok(())
         }

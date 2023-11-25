@@ -1,6 +1,6 @@
+use anyhow::Result;
 use pyo3::prelude::*;
 use pyo3::{py_run, PyCell};
-use std::io;
 
 #[pyclass]
 struct AppArgs {
@@ -11,7 +11,7 @@ struct AppArgs {
     login: bool,
 }
 
-pub fn launch_app(port: i32, login: bool) -> Result<(), io::Error> {
+pub fn launch_app(port: i32, login: bool) -> Result<(), anyhow::Error> {
     Python::with_gil(|py| {
         let app_args = AppArgs { port, login };
         let app_args = PyCell::new(py, app_args).unwrap();
@@ -45,7 +45,7 @@ mod tests {
             let port = 8000;
             let login = false;
 
-            let _ = launch_app(port, login).unwrap();
+            launch_app(port, login).unwrap();
         });
 
         thread::sleep(Duration::from_secs(15));

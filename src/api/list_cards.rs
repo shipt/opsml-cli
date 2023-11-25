@@ -23,7 +23,7 @@ fn validate_registry(registry: &str) -> Result<(), anyhow::Error> {
     } else {
         Err(anyhow::Error::msg(format!(
             "Invalid registry: {}. Valid registries are: data, model, run, pipeline, audit, project",
-            registry.to_string()
+            registry
         )))
     }
 }
@@ -41,7 +41,7 @@ fn parse_list_response(response: &str) -> Result<String, anyhow::Error> {
     // Parses response and creates a table
 
     let cards: types::ListCardResponse = serde_json::from_str(response)
-        .with_context(|| format!("Failed to load response to ListCardResponse JSON"))
+        .with_context(|| "Failed to load response to ListCardResponse JSON")
         .unwrap();
 
     let mut card_table: Vec<types::CardTable> = Vec::new();
@@ -99,7 +99,7 @@ pub async fn list_cards(
     // create empty dict for tags
     let mut tags: HashMap<String, String> = HashMap::new();
 
-    let _valid = validate_registry(registry)?;
+    validate_registry(registry)?;
 
     if tag_name.is_some() && tag_value.is_some() {
         tags = tag_name

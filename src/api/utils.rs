@@ -2,10 +2,8 @@ use anyhow::Context;
 use lazy_static::lazy_static;
 use reqwest::Url;
 use reqwest::{self, Response};
-use serde::de::Error;
 use serde::Serialize;
 use std::env;
-use std::io;
 
 lazy_static! {
     static ref OPSML_TRACKING_URI: String = match env::var("OPSML_TRACKING_URI") {
