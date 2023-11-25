@@ -59,6 +59,7 @@ jobs:
         
       - name: Run cargo tests
         run: |
+          source .venv/bin/activate
           make format
           make lints
           make test.unit
@@ -109,6 +110,7 @@ jobs:
         
       - name: Run cargo tests
         run: |
+          sudo apt-get install python3-pkgconfig libopenblas-dev
           source .venv/bin/activate
           make format
           make lints
