@@ -1,8 +1,10 @@
 use api::command_structs::{
-    CompareMetricArgs, DownloadModelArgs, ListCards, ModelMetadataArgs, ModelMetricArgs,
+    CompareMetricArgs, DownloadModelArgs, LaunchAppArgs, ListCards, ModelMetadataArgs,
+    ModelMetricArgs,
 };
 use api::download_file::download_model;
 use api::download_file::download_model_metadata;
+use api::launch_app::launch_app;
 use api::list_cards::list_cards;
 use api::metrics::{compare_model_metrics, get_model_metrics};
 mod api;
@@ -51,6 +53,13 @@ enum Commands {
     ///
     /// opsml-cli compare-model-metrics
     CompareModelMetrics(CompareMetricArgs),
+
+    /// Launch opsml server with uvicorn
+    ///
+    /// # Example
+    ///
+    /// opsml-cli launch-uvicorn-app
+    LaunchUvicornApp(LaunchAppArgs),
 }
 
 fn main() -> Result<(), String> {
@@ -80,18 +89,25 @@ fn main() -> Result<(), String> {
 
         // subcommand for downloading model metadata
         Some(Commands::DownloadModelMetadata(args)) => {
-            download_model_metadata(
+            let response = download_model_metadata(
                 args.name.clone(),
                 args.version.clone(),
                 args.uid.clone(),
                 &args.write_dir,
                 args.ignore_release_candidates,
-            )?;
-            Ok(())
+            );
+
+            match response {
+                Ok(_response) => Ok(()),
+                Err(e) => {
+                    println!("Error downloading model metadata {}", e);
+                    ::std::process::exit(1)
+                }
+            }
         }
         // subcommand for downloading a model
         Some(Commands::DownloadModel(args)) => {
-            download_model(
+            let response = download_model(
                 args.name.clone(),
                 args.version.clone(),
                 args.uid.clone(),
@@ -99,8 +115,15 @@ fn main() -> Result<(), String> {
                 args.no_onnx,
                 args.onnx,
                 args.ignore_release_candidates,
-            )?;
-            Ok(())
+            );
+
+            match response {
+                Ok(_response) => Ok(()),
+                Err(e) => {
+                    println!("Error downloading model {}", e);
+                    ::std::process::exit(1)
+                }
+            }
         }
         // subcommand for getting model metrics
         Some(Commands::GetModelMetrics(args)) => {
@@ -112,7 +135,10 @@ fn main() -> Result<(), String> {
 
             match response {
                 Ok(response) => Ok(response),
-                Err(e) => Err(e.to_string()),
+                Err(e) => {
+                    println!("Error getting metrics {}", e);
+                    ::std::process::exit(1)
+                }
             }
         }
 
@@ -127,7 +153,23 @@ fn main() -> Result<(), String> {
 
             match response {
                 Ok(response) => Ok(response),
-                Err(e) => Err(e.to_string()),
+                Err(e) => {
+                    println!("Error comparing metrics {}", e);
+                    ::std::process::exit(1)
+                }
+            }
+        }
+
+        // subcommand for launching uvicorn app
+        Some(Commands::LaunchUvicornApp(args)) => {
+            let response = launch_app(args.port, args.login);
+
+            match response {
+                Ok(response) => Ok(response),
+                Err(e) => {
+                    println!("Error launching app {}", e);
+                    ::std::process::exit(1)
+                }
             }
         }
 

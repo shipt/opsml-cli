@@ -2,6 +2,7 @@ use lazy_static::lazy_static;
 use reqwest::{self, Response};
 use serde::Serialize;
 use std::env;
+use std::io;
 
 lazy_static! {
     static ref OPSML_TRACKING_URI: String = match env::var("OPSML_TRACKING_URI") {
@@ -47,7 +48,7 @@ pub async fn check_args(
     name: &Option<String>,
     version: &Option<String>,
     uid: &Option<String>,
-) -> Result<(), String> {
+) -> Result<(), io::Error> {
     let common_args = [name, version];
     let has_common = common_args.iter().all(|i| i.is_none());
 
@@ -56,7 +57,10 @@ pub async fn check_args(
     if has_common != has_uid {
         Ok(())
     } else {
-        Err("Either name/version or uid must be specified".to_string())
+        Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "Please provide either a name and version or a uid",
+        ))
     }
 }
 
@@ -81,18 +85,21 @@ pub fn remove_suffix(s: &str, suffix: char) -> String {
 /// * `url` - A string slice
 /// * `payload` - A string slice
 ///
-pub async fn make_post_request<T: Serialize>(url: &str, payload: &T) -> Response {
+pub async fn make_post_request<T: Serialize>(
+    url: &str,
+    payload: &T,
+) -> Result<Response, reqwest::Error> {
     let parsed_url = reqwest::Url::parse(url).unwrap();
     let client = reqwest::Client::new();
 
-    client.post(parsed_url).json(payload).send().await.unwrap()
+    client.post(parsed_url).json(payload).send().await
 }
 
-pub async fn make_get_request(url: &str) -> Response {
+pub async fn make_get_request(url: &str) -> Result<Response, reqwest::Error> {
     let parsed_url = reqwest::Url::parse(url).unwrap();
     let client = reqwest::Client::new();
 
-    client.get(parsed_url).send().await.unwrap()
+    client.get(parsed_url).send().await
 }
 
 #[cfg(test)]

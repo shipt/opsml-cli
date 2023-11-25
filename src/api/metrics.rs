@@ -118,7 +118,9 @@ pub async fn get_model_metrics(
     };
 
     let response =
-        utils::make_post_request(&utils::OpsmlPaths::Metric.as_str(), &model_metric_request).await;
+        utils::make_post_request(&utils::OpsmlPaths::Metric.as_str(), &model_metric_request)
+            .await
+            .unwrap();
 
     if response.status().is_success() {
         let metric_table = parse_metric_response(&response.text().await?);
@@ -150,14 +152,15 @@ pub async fn compare_model_metrics(
         &utils::OpsmlPaths::CompareMetric.as_str(),
         &compare_metric_request,
     )
-    .await;
+    .await
+    .unwrap();
 
     if response.status().is_success() {
-        let metric_table = parse_compare_metric_response(&response.text().await?);
+        let metric_table = parse_compare_metric_response(&response.text().await.unwrap());
         println!("{}", metric_table);
     } else {
         println!("Failed to get metrics for model");
-        response.error_for_status_ref()?;
+        response.error_for_status_ref().unwrap();
     }
 
     Ok(())

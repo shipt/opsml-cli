@@ -121,14 +121,16 @@ pub async fn list_cards(
     };
 
     let response =
-        utils::make_post_request(&utils::OpsmlPaths::ListCard.as_str(), &list_table_request).await;
+        utils::make_post_request(&utils::OpsmlPaths::ListCard.as_str(), &list_table_request)
+            .await
+            .unwrap();
 
     if response.status().is_success() {
         let card_table = parse_list_response(&response.text().await.unwrap());
         println!("{}", card_table);
     } else {
         println!("Failed to list cards");
-        response.error_for_status_ref()?;
+        response.error_for_status_ref().unwrap();
     }
 
     Ok(())

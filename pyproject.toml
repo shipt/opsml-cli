@@ -1,6 +1,15 @@
+[tool.poetry]
+name = "opsml-cli"
+version = "0.1.0"
+description = "Rust-based CLI for interacting with OpsML"
+readme = "README.md"
+authors = ["Thorrester <48217609+thorrester@users.noreply.github.com>"]
+
+
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.9,<3.12"
 maturin = {extras = ["patchelf"], version = "^1.2.0"}
+
 
 [build-system]
 requires = ["maturin>=1.2,<2.0"]
@@ -12,7 +21,7 @@ strip = true
 
 [project]
 name = "opsml-cli"
-requires-python = ">=3.7"
+requires-python = ">=3.9,<3.12"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
