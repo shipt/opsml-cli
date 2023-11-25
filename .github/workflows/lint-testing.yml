@@ -100,7 +100,16 @@ jobs:
         with:
           python-version: "3.11"
 
-      - run: pip install -U twine 'black>=22.3.0,<23' typing_extensions
+      - run: pip install -U twine maturin
+
+      - name: Set up Rust
+        run: rustup override set stable && rustup update
+
+      - name: Try maturin
+        run: |
+          maturin build --release --out dist --interpreter 3.11
+        env:
+          RUST_BACKTRACE: 1
 
       - name: build wheels
         uses: PyO3/maturin-action@v1
@@ -110,6 +119,8 @@ jobs:
           args: --release --out dist --interpreter 3.11
           rust-toolchain: stable
           docker-options: -e CI
+        env:
+          RUST_BACKTRACE: 1
 
       - run: ls -lh dist/
 
