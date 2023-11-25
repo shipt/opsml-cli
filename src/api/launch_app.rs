@@ -31,25 +31,3 @@ pub fn launch_app(port: i32, login: bool) -> Result<(), anyhow::Error> {
 
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::thread;
-    use std::time::Duration;
-
-    #[test]
-    fn test_launch_app() {
-        // spawn new thread
-        thread::spawn(|| {
-            let port = 8000;
-            let login = false;
-
-            launch_app(port, login).unwrap();
-        });
-
-        thread::sleep(Duration::from_secs(15));
-
-        //shut down the app on port 8000
-    }
-}
