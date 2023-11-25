@@ -3,6 +3,7 @@ use crate::api::utils;
 use futures_util::StreamExt;
 use reqwest::{self, Response};
 use serde_json;
+use std::io::{self};
 use std::{format, fs, path::Path};
 use tokio;
 
@@ -18,7 +19,7 @@ const NO_ONNX_URI: &str = "No onnx model uri found but onnx flag set to true";
 /// # Returns
 /// * `String` - String representation of response
 ///
-async fn load_stream_response(response: Response) -> String {
+async fn load_stream_response(response: Response) -> Result<String, io::Error> {
     let mut response_stream = response.bytes_stream();
     let mut stream_buffer = String::new();
     while let Some(item) = response_stream.next().await {
@@ -27,7 +28,7 @@ async fn load_stream_response(response: Response) -> String {
 
         stream_buffer.push_str(string_chunk);
     }
-    stream_buffer
+    Ok(stream_buffer)
 }
 
 /// Downloads a stream to a file
@@ -40,7 +41,10 @@ async fn load_stream_response(response: Response) -> String {
 /// # Returns
 /// * `Result<(), String>` - Result of file download
 ///
-async fn download_stream_to_file(response: Response, filename: &Path) -> Result<(), String> {
+async fn download_stream_to_file(
+    response: Response,
+    filename: &Path,
+) -> Result<(), tokio::io::Error> {
     let mut response_stream = response.bytes_stream();
     let mut file = tokio::fs::File::create(filename).await.unwrap();
 
@@ -75,7 +79,10 @@ fn create_dir_path(path: &str) {
 /// # Returns
 /// * `Result<(), String>` - Result of file download
 ///
-async fn save_metadata_to_json(metadata: &types::ModelMetadata, path: &str) -> Result<(), String> {
+async fn save_metadata_to_json(
+    metadata: &types::ModelMetadata,
+    path: &str,
+) -> Result<(), io::Error> {
     let json_string = serde_json::to_string(metadata).unwrap();
     fs::File::create(path).expect("Unable to create metadata file");
     fs::write(path, json_string).expect("Unable to write file");
@@ -97,12 +104,12 @@ async fn download_model_file(
     url: &str,
     model_uri: &str,
     local_save_path: &str,
-) -> Result<(), String> {
+) -> Result<(), io::Error> {
     let model_url = format!("{}?read_path={}", url, model_uri);
-    let response = utils::make_get_request(&model_url).await;
+    let response = utils::make_get_request(&model_url).await.unwrap();
     let filepath = Path::new(local_save_path);
 
-    download_stream_to_file(response, filepath).await?;
+    download_stream_to_file(response, filepath).await.unwrap();
 
     Ok(())
 }
@@ -125,7 +132,7 @@ async fn get_model_metadata(
     uid: Option<String>,
     write_dir: &str,
     ignore_release_candidates: bool,
-) -> Result<types::ModelMetadata, String> {
+) -> Result<types::ModelMetadata, io::Error> {
     let save_path: String = format!("{}/{}", write_dir, MODEL_METADATA_FILE);
 
     let model_metadata_request = types::ModelMetadataRequest {
@@ -139,9 +146,10 @@ async fn get_model_metadata(
         &utils::OpsmlPaths::MetadataDownload.as_str(),
         &model_metadata_request,
     )
-    .await;
+    .await
+    .unwrap();
 
-    let loaded_response = load_stream_response(response).await;
+    let loaded_response = load_stream_response(response).await.unwrap();
     let model_metadata: types::ModelMetadata =
         serde_json::from_str(&loaded_response).expect("Failed to parse model Metadata");
 
@@ -189,11 +197,14 @@ pub async fn download_model_metadata(
     uid: Option<String>,
     write_dir: &str,
     ignore_release_candidates: bool,
-) -> Result<types::ModelMetadata, String> {
+) -> Result<types::ModelMetadata, io::Error> {
     // check args first
-    utils::check_args(&name, &version, &uid).await?;
+    utils::check_args(&name, &version, &uid).await.unwrap();
     let model_metadata =
-        get_model_metadata(name, version, uid, write_dir, ignore_release_candidates).await?;
+        get_model_metadata(name, version, uid, write_dir, ignore_release_candidates)
+            .await
+            .unwrap();
+
     Ok(model_metadata)
 }
 
@@ -217,16 +228,18 @@ pub async fn download_model(
     no_onnx: bool,
     onnx: bool,
     ignore_release_candidates: bool,
-) -> Result<(), String> {
+) -> Result<(), io::Error> {
     // check args first
-    utils::check_args(&name, &version, &uid).await?;
+    utils::check_args(&name, &version, &uid).await.unwrap();
 
     // If no onnx is set to true, we need to cancel out onnx: true
     // Clap does not currently support command line negation flags
 
     let download_onnx = !(onnx && no_onnx);
     let model_metadata =
-        get_model_metadata(name, version, uid, write_dir, ignore_release_candidates).await?;
+        get_model_metadata(name, version, uid, write_dir, ignore_release_candidates)
+            .await
+            .unwrap();
     let (filename, model_uri) = get_model_uri(download_onnx, &model_metadata);
 
     println!("Downloading model: {}, {}", filename, model_uri);
@@ -242,7 +255,8 @@ pub async fn download_model(
         &model_uri,
         &local_save_path,
     )
-    .await?;
+    .await
+    .unwrap();
 
     Ok(())
 }
@@ -252,6 +266,7 @@ mod tests {
     use super::*;
     use assert_json_diff::assert_json_eq;
     use std::fs;
+    use std::io;
     use tokio;
     use uuid::Uuid;
 
@@ -276,7 +291,7 @@ mod tests {
         let client = reqwest::Client::new();
         let full_path: String = format!("{}/fake", &url);
         let response = client.get(&full_path).send().await.unwrap();
-        let loaded_response = load_stream_response(response).await;
+        let loaded_response = load_stream_response(response).await.unwrap();
         let model_metadata: types::ModelMetadata = serde_json::from_str(&loaded_response).unwrap();
 
         // assert structs are the same
@@ -286,7 +301,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_save_json() -> Result<(), String> {
+    async fn test_save_json() -> Result<(), io::Error> {
         // read mock response object
         let unique_name = Uuid::new_v4().to_string();
         let path = "./src/api/test_utils/metadata_onnx.json";
@@ -294,7 +309,9 @@ mod tests {
         let mock_metadata_orig: types::ModelMetadata = serde_json::from_str(&data).unwrap();
         let new_path = format!("./src/api/test_utils/{}_mock_response.json", unique_name);
 
-        save_metadata_to_json(&mock_metadata_orig, &new_path).await?;
+        save_metadata_to_json(&mock_metadata_orig, &new_path)
+            .await
+            .unwrap();
 
         let new_data = fs::read_to_string(&new_path).expect("Unable to read file");
 
@@ -324,7 +341,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_download_stream_to_file() -> Result<(), String> {
+    async fn test_download_stream_to_file() -> Result<(), io::Error> {
         let mut server = mockito::Server::new();
         let url = server.url();
         let path = "./src/api/test_utils/metadata_onnx.json";
@@ -367,7 +384,9 @@ mod tests {
             .create();
 
         let full_path: String = format!("{}/fake", &url);
-        let response = utils::make_post_request(&full_path, &payload).await;
+        let response = utils::make_post_request(&full_path, &payload)
+            .await
+            .unwrap();
 
         assert_eq!(response.status(), 201);
         mock.assert();
@@ -387,7 +406,7 @@ mod tests {
             .create();
 
         let full_path: String = format!("{}/fake", &url);
-        let response = utils::make_get_request(&full_path).await;
+        let response = utils::make_get_request(&full_path).await.unwrap();
 
         assert_eq!(response.status(), 201);
         mock.assert();

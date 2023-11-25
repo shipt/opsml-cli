@@ -144,3 +144,14 @@ pub struct CompareMetricArgs {
     )]
     pub champion_uid: Vec<String>,
 }
+
+#[derive(Args)]
+pub struct LaunchAppArgs {
+    /// Whether to use login credentials
+    #[arg(long = "login", default_value = "false")]
+    pub login: bool,
+
+    /// Default port to use with the opsml server
+    #[arg(long = "port", default_value = "8888")]
+    pub port: i32,
+}
