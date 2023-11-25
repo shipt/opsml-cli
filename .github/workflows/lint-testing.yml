@@ -49,17 +49,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
 
-      - name: Create virtual environment
-        run: |
-          python -m venv .venv
-          echo "$GITHUB_WORKSPACE/opsml_cli/.venv/bin" >> $GITHUB_PATH
-
       - name: Install dependencies
-        run : make setup.project
+        run : |
+          poetry export --format=requirements.txt > requirements.txt
+          pip install -r requirements.txt
         
       - name: Run cargo tests
         run: |
-          . .venv/bin/activate
           make format
           make lints
           make test.unit
