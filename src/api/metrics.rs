@@ -1,7 +1,6 @@
 use crate::api::types;
 use crate::api::utils;
 use owo_colors::OwoColorize;
-use reqwest;
 use tabled::settings::style::Style;
 use tabled::{settings::Alignment, Table};
 
@@ -110,7 +109,7 @@ pub async fn get_model_metrics(
     name: Option<&str>,
     version: Option<&str>,
     uid: Option<&str>,
-) -> Result<(), reqwest::Error> {
+) -> Result<(), anyhow::Error> {
     let model_metric_request = types::CardRequest {
         name: name.map(|s| s.to_string()),
         version: version.map(|s| s.to_string()),
@@ -119,18 +118,18 @@ pub async fn get_model_metrics(
 
     let response =
         utils::make_post_request(&utils::OpsmlPaths::Metric.as_str(), &model_metric_request)
-            .await
-            .unwrap();
+            .await?;
 
     if response.status().is_success() {
         let metric_table = parse_metric_response(&response.text().await?);
         println!("{}", metric_table);
+        Ok(())
     } else {
-        println!("Failed to get metrics for model");
-        response.error_for_status_ref()?;
+        Err(anyhow::Error::msg(format!(
+            "Request failed {:?}",
+            response.error_for_status_ref()
+        )))
     }
-
-    Ok(())
 }
 
 #[tokio::main]
@@ -139,7 +138,7 @@ pub async fn compare_model_metrics(
     lower_is_better: &[bool],
     challenger_uid: &str,
     champion_uid: &[String],
-) -> Result<(), reqwest::Error> {
+) -> Result<(), anyhow::Error> {
     // set up repair request
     let compare_metric_request = types::CompareMetricRequest {
         metric_name: metric_name.to_owned(),
@@ -152,18 +151,18 @@ pub async fn compare_model_metrics(
         &utils::OpsmlPaths::CompareMetric.as_str(),
         &compare_metric_request,
     )
-    .await
-    .unwrap();
+    .await?;
 
     if response.status().is_success() {
         let metric_table = parse_compare_metric_response(&response.text().await.unwrap());
         println!("{}", metric_table);
+        Ok(())
     } else {
-        println!("Failed to get metrics for model");
-        response.error_for_status_ref().unwrap();
+        Err(anyhow::Error::msg(format!(
+            "Request failed {:?}",
+            response.error_for_status_ref()
+        )))
     }
-
-    Ok(())
 }
 
 #[cfg(test)]

@@ -4,7 +4,6 @@ use anyhow::{Context, Result};
 use futures_util::StreamExt;
 use reqwest::{self, Response};
 use serde_json;
-use std::io::{self};
 use std::{format, fs, path::Path};
 use tokio;
 
@@ -24,7 +23,7 @@ async fn load_stream_response(response: Response) -> Result<String, anyhow::Erro
     let mut response_stream = response.bytes_stream();
     let mut stream_buffer = String::new();
     while let Some(item) = response_stream.next().await {
-        let chunk = item.with_context(|| format!("failed to read stream response"))?;
+        let chunk = item.with_context(|| "failed to read stream response")?;
         let string_chunk = std::str::from_utf8(&chunk).unwrap();
 
         stream_buffer.push_str(string_chunk);
