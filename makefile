@@ -5,6 +5,7 @@ SOURCE_OBJECTS=src
 
 setup.project:
 	poetry install --all-extras --with dev
+	pip install maturin
 
 test.unit:
 	cargo test
