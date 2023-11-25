@@ -1,5 +1,8 @@
+use anyhow::Context;
 use lazy_static::lazy_static;
+use reqwest::Url;
 use reqwest::{self, Response};
+use serde::de::Error;
 use serde::Serialize;
 use std::env;
 use std::io;
@@ -48,7 +51,7 @@ pub async fn check_args(
     name: &Option<String>,
     version: &Option<String>,
     uid: &Option<String>,
-) -> Result<(), io::Error> {
+) -> Result<(), anyhow::Error> {
     let common_args = [name, version];
     let has_common = common_args.iter().all(|i| i.is_none());
 
@@ -57,9 +60,8 @@ pub async fn check_args(
     if has_common != has_uid {
         Ok(())
     } else {
-        Err(io::Error::new(
-            io::ErrorKind::InvalidInput,
-            "Please provide either a name and version or a uid",
+        Err(anyhow::Error::msg(
+            "Please provide either a uid or a name and version",
         ))
     }
 }
@@ -78,6 +80,13 @@ pub fn remove_suffix(s: &str, suffix: char) -> String {
     }
 }
 
+pub async fn create_client(url: &str) -> Result<(reqwest::Client, Url), anyhow::Error> {
+    let parsed_url = reqwest::Url::parse(url).with_context(|| "Failed to parse url")?;
+    let client = reqwest::Client::new();
+
+    Ok((client, parsed_url))
+}
+
 /// async post request for metadata
 ///
 /// # Arguments
@@ -88,18 +97,30 @@ pub fn remove_suffix(s: &str, suffix: char) -> String {
 pub async fn make_post_request<T: Serialize>(
     url: &str,
     payload: &T,
-) -> Result<Response, reqwest::Error> {
-    let parsed_url = reqwest::Url::parse(url).unwrap();
-    let client = reqwest::Client::new();
+) -> Result<Response, anyhow::Error> {
+    let (client, parsed_url) = create_client(url).await.unwrap();
+    let msg = client.post(parsed_url).json(payload).send();
 
-    client.post(parsed_url).json(payload).send().await
+    match msg.await {
+        Ok(response) => Ok(response),
+        Err(e) => Err(anyhow::Error::msg(format!(
+            "Failed to make post request: {}",
+            e
+        ))),
+    }
 }
 
-pub async fn make_get_request(url: &str) -> Result<Response, reqwest::Error> {
-    let parsed_url = reqwest::Url::parse(url).unwrap();
-    let client = reqwest::Client::new();
+pub async fn make_get_request(url: &str) -> Result<Response, anyhow::Error> {
+    let (client, parsed_url) = create_client(url).await.unwrap();
+    let msg = client.get(parsed_url).send();
 
-    client.get(parsed_url).send().await
+    match msg.await {
+        Ok(response) => Ok(response),
+        Err(e) => Err(anyhow::Error::msg(format!(
+            "Failed to make get request: {}",
+            e
+        ))),
+    }
 }
 
 #[cfg(test)]

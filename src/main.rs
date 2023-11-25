@@ -8,6 +8,7 @@ use api::launch_app::launch_app;
 use api::list_cards::list_cards;
 use api::metrics::{compare_model_metrics, get_model_metrics};
 mod api;
+use anyhow::{Context, Result};
 use clap::command;
 use clap::Parser;
 use clap::Subcommand;
@@ -62,7 +63,7 @@ enum Commands {
     LaunchUvicornApp(LaunchAppArgs),
 }
 
-fn main() -> Result<(), String> {
+fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
@@ -81,10 +82,9 @@ fn main() -> Result<(), String> {
                 args.ignore_release_candidates,
             );
 
-            match response {
-                Ok(response) => Ok(response),
-                Err(e) => Err(e.to_string()),
-            }
+            response.with_context(|| "Failed to list cards")?;
+
+            Ok(())
         }
 
         // subcommand for downloading model metadata
@@ -97,13 +97,14 @@ fn main() -> Result<(), String> {
                 args.ignore_release_candidates,
             );
 
-            match response {
-                Ok(_response) => Ok(()),
-                Err(e) => {
-                    println!("Error downloading model metadata {}", e);
-                    ::std::process::exit(1)
-                }
-            }
+            response.with_context(|| {
+                format!(
+                    "Failed to download model metadata for {:?}",
+                    args.name.clone()
+                )
+            })?;
+
+            Ok(())
         }
         // subcommand for downloading a model
         Some(Commands::DownloadModel(args)) => {
@@ -117,13 +118,9 @@ fn main() -> Result<(), String> {
                 args.ignore_release_candidates,
             );
 
-            match response {
-                Ok(_response) => Ok(()),
-                Err(e) => {
-                    println!("Error downloading model {}", e);
-                    ::std::process::exit(1)
-                }
-            }
+            response
+                .with_context(|| format!("Failed to download model for {:?}", args.name.clone()))?;
+            Ok(())
         }
         // subcommand for getting model metrics
         Some(Commands::GetModelMetrics(args)) => {
@@ -133,13 +130,11 @@ fn main() -> Result<(), String> {
                 args.uid.as_deref(),
             );
 
-            match response {
-                Ok(response) => Ok(response),
-                Err(e) => {
-                    println!("Error getting metrics {}", e);
-                    ::std::process::exit(1)
-                }
-            }
+            response
+                .with_context(|| format!("Failed to read instrs from"))
+                .unwrap();
+
+            Ok(())
         }
 
         // subcommand for comparing model metrics
@@ -151,26 +146,22 @@ fn main() -> Result<(), String> {
                 &args.champion_uid,
             );
 
-            match response {
-                Ok(response) => Ok(response),
-                Err(e) => {
-                    println!("Error comparing metrics {}", e);
-                    ::std::process::exit(1)
-                }
-            }
+            response
+                .with_context(|| format!("Failed to read instrs from"))
+                .unwrap();
+
+            Ok(())
         }
 
         // subcommand for launching uvicorn app
         Some(Commands::LaunchUvicornApp(args)) => {
             let response = launch_app(args.port, args.login);
 
-            match response {
-                Ok(response) => Ok(response),
-                Err(e) => {
-                    println!("Error launching app {}", e);
-                    ::std::process::exit(1)
-                }
-            }
+            response
+                .with_context(|| format!("Failed to read instrs from"))
+                .unwrap();
+
+            Ok(())
         }
 
         None => Ok(()),
