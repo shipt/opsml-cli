@@ -102,6 +102,9 @@ jobs:
 
       - run: pip install -U twine
 
+      - name: Set up deps
+        run: sudo apt install libssl-dev
+
       - name: build wheels
         uses: PyO3/maturin-action@v1
         with:
