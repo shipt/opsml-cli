@@ -790,7 +790,6 @@ dependencies = [
  "lazy_static",
  "mockito",
  "openssl",
- "openssl-sys",
  "owo-colors",
  "reqwest",
  "serde",
