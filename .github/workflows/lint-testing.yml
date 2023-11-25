@@ -109,7 +109,7 @@ jobs:
         
       - name: Run cargo tests
         run: |
-          . .venv/bin/activate
+          source .venv/bin/activate
           make format
           make lints
           make test.unit
