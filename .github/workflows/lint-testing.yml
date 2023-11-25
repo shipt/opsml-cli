@@ -106,11 +106,12 @@ jobs:
           echo "$GITHUB_WORKSPACE/opsml_cli/.venv/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
-        run : make setup.project
+        run : |
+          sudo apt-get install python3-pkgconfig libopenblas-dev
+          make setup.project
         
       - name: Run cargo tests
         run: |
-          sudo apt-get install python3-pkgconfig libopenblas-dev
           source .venv/bin/activate
           make format
           make lints
