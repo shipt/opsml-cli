@@ -1,6 +1,6 @@
 use crate::api::types;
 use crate::api::utils;
-use reqwest;
+use anyhow::{Context, Result};
 use serde_json;
 use std::collections::HashMap;
 use tabled::settings::style::Style;
@@ -12,19 +12,19 @@ use tabled::{settings::Alignment, Table};
 ///
 /// * `registry` - Registry to check
 ///
-fn validate_registry(registry: &str) -> String {
+fn validate_registry(registry: &str) -> Result<(), anyhow::Error> {
     // Determines correct  registry to use
 
     let registries = ["data", "model", "run", "pipeline", "audit", "project"];
 
     if registries.contains(&registry) {
-        registry.to_string()
+        registry.to_string();
+        Ok(())
     } else {
-        panic!(
-            "Invalid registry {}. Accepted registry names include 
-        'data', 'model', 'run', 'audit', 'project' and 'pipeline.",
-            registry
-        );
+        Err(anyhow::Error::msg(format!(
+            "Invalid registry: {}. Valid registries are: data, model, run, pipeline, audit, project",
+            registry.to_string()
+        )))
     }
 }
 
@@ -37,11 +37,12 @@ fn validate_registry(registry: &str) -> String {
 /// # Returns
 ///  String - Table of cards
 ///
-fn parse_list_response(response: &str) -> String {
+fn parse_list_response(response: &str) -> Result<String, anyhow::Error> {
     // Parses response and creates a table
 
-    let cards: types::ListCardResponse =
-        serde_json::from_str(response).expect("Failed to load response to CardResponse JSON");
+    let cards: types::ListCardResponse = serde_json::from_str(response)
+        .with_context(|| format!("Failed to load response to ListCardResponse JSON"))
+        .unwrap();
 
     let mut card_table: Vec<types::CardTable> = Vec::new();
 
@@ -61,7 +62,7 @@ fn parse_list_response(response: &str) -> String {
         .with(Style::sharp())
         .to_string();
 
-    list_table
+    Ok(list_table)
 }
 
 /// List cards
@@ -92,12 +93,13 @@ pub async fn list_cards(
     tag_value: Option<Vec<String>>,
     max_date: Option<&str>,
     ignore_release_candidates: bool,
-) -> Result<(), reqwest::Error> {
+) -> Result<(), anyhow::Error> {
     // set full path and table name
 
     // create empty dict for tags
     let mut tags: HashMap<String, String> = HashMap::new();
-    validate_registry(registry);
+
+    let _valid = validate_registry(registry)?;
 
     if tag_name.is_some() && tag_value.is_some() {
         tags = tag_name
@@ -127,13 +129,14 @@ pub async fn list_cards(
 
     if response.status().is_success() {
         let card_table = parse_list_response(&response.text().await.unwrap());
-        println!("{}", card_table);
+        println!("{}", card_table?);
+        Ok(())
     } else {
-        println!("Failed to list cards");
-        response.error_for_status_ref().unwrap();
+        Err(anyhow::Error::msg(format!(
+            "Failed to make call to list cards: {}",
+            response.text().await.unwrap()
+        )))
     }
-
-    Ok(())
 }
 
 #[cfg(test)]
@@ -145,7 +148,7 @@ mod tests {
         let v = vec!["data", "model", "run", "audit"];
 
         for name in &v {
-            validate_registry(name);
+            validate_registry(name).unwrap();
         }
     }
 
@@ -168,7 +171,7 @@ mod tests {
 
         let card_table = parse_list_response(&string_response);
         assert_eq!(
-            card_table,
+            card_table.unwrap(),
             concat!(
                 "┌──────┬──────┬──────┬────────────┬─────────┬─────┐\n",
                 "│ name │ team │ date │ user_email │ version │ uid │\n",
