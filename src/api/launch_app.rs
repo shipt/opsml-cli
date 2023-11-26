@@ -46,7 +46,7 @@ mod tests {
             let port = 8000;
             let login = false;
 
-            let _ = launch_app(port, login).unwrap();
+            launch_app(port, login).unwrap();
         });
 
         thread::sleep(Duration::from_secs(15));
