@@ -17,14 +17,12 @@ env:
 jobs:
   test-os:
 
-    name: test ${{ matrix.os }}-${{ matrix.python-version }}
+    name: test ${{ matrix.os }}
 
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu, macos, windows]
-        poetry-version: ["1.5.1"]
-        python-version: ["3.9", "3.10","3.11.5"]
 
     runs-on: ${{ matrix.os }}-latest
     steps:
@@ -39,7 +37,7 @@ jobs:
       - name: cache rust
         uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.os }}-${{ matrix.python-version }}-v1
+          key: ${{ matrix.os }}-v1
 
       - name: Run cargo tests # not running launch test due to python issues in github actions
         run: |
@@ -49,39 +47,6 @@ jobs:
         env:
           RUST_BACKTRACE: 1
 
-
-  test-ubuntu-pypy:
-    name: test ubuntu-${{ matrix.python-version }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        poetry-version: ["1.5.1"]
-        python-version: ["pypy3.9", "pypy3.10"]
-        os: [ubuntu]
-
-    runs-on: ${{ matrix.os }}-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Rust
-        run: rustup override set stable && rustup update
-
-      - name: Install clippy
-        run: rustup component add clippy
-
-      - name: cache rust
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: ${{ matrix.os }}-${{ matrix.python-version }}-v1
-        
-      - name: Run cargo tests # exlcude tests that require python (pypy image has issues with openblas)
-        run: |
-          make format
-          make lints
-          make test.unit 
-        env:
-          RUST_BACKTRACE: 1
 
   test-build:
     needs: [test-os]
