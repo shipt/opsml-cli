@@ -68,6 +68,7 @@ jobs:
           make format
           make lints
           make test.all
+        shell: bash
         env:
           RUST_BACKTRACE: 1
 
