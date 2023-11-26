@@ -80,7 +80,7 @@ fn main() -> Result<()> {
                 args.max_date.as_deref(),
                 args.ignore_release_candidates,
             )
-            .with_context(|| "Failed to list cards")?;
+            .with_context(|| format!("{}", "Failed to list cards".bold().red()))?;
 
             Ok(())
         }
