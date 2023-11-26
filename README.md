@@ -1,0 +1,30 @@
+# Opsml-cli
+
+This package provides a rust-based CLI for interacting with [opsml](https://github.com/shipt/opsml).
+
+## Installation
+
+### Using Poetry
+
+```bash
+poetry add opsml-cli
+```
+
+### Using Pip
+
+```bash
+pip install opsml-cli
+```
+
+## Commands
+
+To get a list of commands, run `opsml-cli help`.
+
+## Contributing
+If you'd like to contribute, be sure to check out our [contributing guide](./CONTRIBUTING.md)!
+
+Thanks goes to these phenomenal [projects and people](./ATTRIBUTIONS.md) and people for creating a great foundation to build from!
+
+<a href="https://github.com/shipt/opsml-cli/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=shipt/opsml-cli" />
+</a>
