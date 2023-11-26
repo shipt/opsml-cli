@@ -1,9 +1,17 @@
 name: Release
 
-on:
+#on:
+#
+#  release:
+#    types: [published]
 
-  release:
-    types: [published]
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -60,7 +68,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64, x86, aarch64, armv7, s390x, ppc64le]
+        target: [x86_64, x86, aarch64, armv7, s390x, ppc64le, i686]
         manylinux: [auto]
 
     runs-on: ubuntu-latest
@@ -196,11 +204,12 @@ jobs:
 
   build-windows:
     needs: [rust-lints-test]
-    name: build - windows - (${{ matrix.target }} - auto
+    name: build on ${{ matrix.os }} (${{ matrix.target }} - ${{ matrix.interpreter || 'all' }}${{ matrix.os == 'linux' && format(' - {0}', matrix.manylinux == 'auto' && 'manylinux' || matrix.manylinux) || '' }})
     strategy:
       fail-fast: false
       matrix:
         target: [x64, x86]
+        os: [windows]
         include:
           - target: i686
             python-architecture: x86
@@ -211,6 +220,10 @@ jobs:
           - target: x86
             python-architecture: x86
             interpreter: 3.8 3.9 3.10 3.11
+          - target: aarch64
+            interpreter: 3.11
+          - target: x86_64
+            interpreter: pypy3.8 pypy3.9 pypy3.10
         exclude:
           - target: x86
           - target: x64
