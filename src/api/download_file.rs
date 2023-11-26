@@ -5,6 +5,7 @@ use crate::api::types;
 use crate::api::utils;
 use anyhow::{Context, Result};
 use futures_util::StreamExt;
+use owo_colors::OwoColorize;
 use reqwest::{self, Response};
 use serde_json;
 use std::{format, fs, path::Path};
@@ -243,7 +244,7 @@ pub async fn download_model(
         get_model_metadata(name, version, uid, write_dir, ignore_release_candidates).await?;
     let (filename, model_uri) = get_model_uri(download_onnx, &model_metadata);
 
-    println!("Downloading model: {}, {}", filename, model_uri);
+    println!("Downloading model: {}, {}", filename.green(), model_uri);
 
     let local_save_path = format!("{}/{}", write_dir, filename);
 

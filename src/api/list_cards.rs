@@ -135,7 +135,7 @@ pub async fn list_cards(
         let card_table = parse_list_response(&response.text().await.unwrap());
 
         println!(
-            "Listing cards from {} registry",
+            "\nListing cards from {} registry",
             registry.to_string().bold().green()
         );
         println!("{}", card_table?);
