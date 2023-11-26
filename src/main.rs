@@ -10,6 +10,7 @@ use anyhow::{Context, Result};
 use clap::command;
 use clap::Parser;
 use clap::Subcommand;
+use owo_colors::OwoColorize;
 
 #[derive(Parser)]
 #[command(about = "CLI tool for Interacting with an Opsml server")]
@@ -96,7 +97,7 @@ fn main() -> Result<()> {
             .with_context(|| {
                 format!(
                     "Failed to download model metadata for {:?}",
-                    args.name.clone()
+                    args.name.clone().bold().red()
                 )
             })?;
 
@@ -113,7 +114,12 @@ fn main() -> Result<()> {
                 args.onnx,
                 args.ignore_release_candidates,
             )
-            .with_context(|| format!("Failed to download model for {:?}", args.name.clone()))?;
+            .with_context(|| {
+                format!(
+                    "Failed to download model for {:?}",
+                    args.name.clone().bold().red()
+                )
+            })?;
             Ok(())
         }
         // subcommand for getting model metrics
@@ -123,7 +129,12 @@ fn main() -> Result<()> {
                 args.version.as_deref(),
                 args.uid.as_deref(),
             )
-            .with_context(|| format!("Failed to get model metrics for {:?}", args.name.clone()))?;
+            .with_context(|| {
+                format!(
+                    "Failed to get model metrics for {:?}",
+                    args.name.clone().bold().red()
+                )
+            })?;
 
             Ok(())
         }
@@ -139,7 +150,7 @@ fn main() -> Result<()> {
             .with_context(|| {
                 format!(
                     "Failed to compare model metrics for {:?}",
-                    &args.champion_uid
+                    &args.champion_uid.bold().red()
                 )
             })?;
 
@@ -148,7 +159,10 @@ fn main() -> Result<()> {
 
         // subcommand for listing opsml-cli version
         Some(Commands::Version) => {
-            println!("opsml-cli version {}", env!("CARGO_PKG_VERSION"));
+            println!(
+                "opsml-cli version {}",
+                env!("CARGO_PKG_VERSION").bold().green()
+            );
             Ok(())
         }
 

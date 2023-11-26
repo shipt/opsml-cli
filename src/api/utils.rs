@@ -1,5 +1,6 @@
 use anyhow::Context;
 use lazy_static::lazy_static;
+use owo_colors::OwoColorize;
 use reqwest::Url;
 use reqwest::{self, Response};
 use serde::Serialize;
@@ -13,7 +14,15 @@ lazy_static! {
             } else {
                 val
             },
-        Err(_e) => panic!("No tracking uri set"),
+
+        Err(_e) => {
+            panic!(
+                "{}",
+                "No OPSML_TRACKING_URI found. Check your environment"
+                    .bold()
+                    .red()
+            )
+        }
     };
 }
 
