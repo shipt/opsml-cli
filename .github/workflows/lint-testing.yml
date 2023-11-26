@@ -60,16 +60,14 @@ jobs:
         
       - name: Run cargo tests # need to activate venv so rust picks up the correct python env. Not running python test on windows
         run: |
-          if [ "RUNNER_OS" != "Windows" ]; then
-            source .venv/bin/activate
-            make format
-            make lints
-            make test.all
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            .venv/Scripts/activate
           else
-            make format
-            make lints
-            make test.unit
+            source .venv/bin/activate
           fi
+          make format
+          make lints
+          make test.all
 
         shell: bash
         env:
