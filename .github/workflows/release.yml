@@ -1,17 +1,9 @@
 name: Release
 
-#on:
-#
-#  release:
-#    types: [published]
-
 on:
-  push:
-    branches:
-      - main
-      - master
-  pull_request:
-  workflow_dispatch:
+  release:
+    types: [published]
+
 
 permissions:
   contents: read
