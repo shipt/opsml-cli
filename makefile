@@ -10,6 +10,9 @@ setup.project:
 test.unit:
 	cargo test
 
+test.all:
+	cargo test -- --include-ignored
+
 format:
 	cargo fmt
 

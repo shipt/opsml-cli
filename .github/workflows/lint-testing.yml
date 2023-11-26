@@ -29,6 +29,8 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install poetry
+        run: pipx install poetry==${{ matrix.poetry-version }}
 
       - name: Set up Rust
         run: rustup override set stable && rustup update
@@ -41,11 +43,31 @@ jobs:
         with:
           key: ${{ matrix.os }}-${{ matrix.python-version }}-v1
 
-      - name: Run cargo tests
+      - name: set up python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'poetry'
+
+      - name: Create virtual environment
         run: |
+          python -m venv .venv
+          echo "$GITHUB_WORKSPACE/opsml_cli/.venv/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run : |
+          make setup.project
+        
+      - name: Run cargo tests # need to activate venv so rust picks up the correct python env
+        run: |
+          if ["RUNNER_OS" == "Windows"]; then
+            .venv/Scripts/activate
+          else
+            source .venv/bin/activate
+          fi
           make format
           make lints
-          make test.unit
+          make test.all
         env:
           RUST_BACKTRACE: 1
 
@@ -74,12 +96,12 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.os }}-${{ matrix.python-version }}-v1
-
-      - name: Run cargo tests
+        
+      - name: Run cargo tests # exlcude tests that require python (pypy image has issues with openblas)
         run: |
           make format
           make lints
-          make test.unit
+          make test.unit 
         env:
           RUST_BACKTRACE: 1
 

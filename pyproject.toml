@@ -9,6 +9,9 @@ authors = ["Thorrester <48217609+thorrester@users.noreply.github.com>"]
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"
 
+[tool.poetry.group.dev.dependencies]
+opsml = {extras = ["server"], version = "^1.4.14"}
+
 [build-system]
 requires = ["maturin>=1.2,<2.0"]
 build-backend = "maturin"
