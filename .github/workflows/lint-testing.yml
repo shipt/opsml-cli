@@ -49,31 +49,19 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: 'poetry'
 
-      - name: Create virtual environment
-        run: |
-          python -m venv .venv
-          echo "$GITHUB_WORKSPACE/opsml_cli/.venv/bin" >> $GITHUB_PATH
 
       - name: Install dependencies
         run : |
-          make setup.project
-        
+          poetry export --format=requirements.txt > requirements.txt
+          pip install -r requirements.txt
+          pip install maturin
+          echo "PYTHONPATH=$PYTHONPATH" >> $GITHUB_ENV
+
       - name: Run cargo tests # need to activate venv so rust picks up the correct python env. Not running python test on windows
         run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            echo "Skipping python tests on windows"
-            make format
-            make lints
-            make test.unit
-          else
-            echo "Running python tests on $RUNNER_OS"
-            source .venv/bin/activate
-            make format
-            make lints
-            make test.all
-          fi
-
-        shell: bash
+          make format
+          make lints
+          make test.all
         env:
           RUST_BACKTRACE: 1
 
