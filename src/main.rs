@@ -1,6 +1,5 @@
 use api::command_structs::{
-    CompareMetricArgs, DownloadModelArgs, LaunchAppArgs, ListCards, ModelMetadataArgs,
-    ModelMetricArgs,
+    CompareMetricArgs, DownloadModelArgs, ListCards, ModelMetadataArgs, ModelMetricArgs,
 };
 use api::download_file::download_model;
 use api::download_file::download_model_metadata;
@@ -53,13 +52,6 @@ enum Commands {
     ///
     /// opsml-cli compare-model-metrics
     CompareModelMetrics(CompareMetricArgs),
-
-    /// Launch opsml server with uvicorn
-    ///
-    /// # Example
-    ///
-    /// opsml-cli launch-uvicorn-app
-    LaunchUvicornApp(LaunchAppArgs),
 
     /// List opsml-cli version
     ///
@@ -150,13 +142,6 @@ fn main() -> Result<()> {
                     &args.champion_uid
                 )
             })?;
-
-            Ok(())
-        }
-
-        // subcommand for launching uvicorn app
-        Some(Commands::LaunchUvicornApp(args)) => {
-            launch_app(args.port, args.login).with_context(|| "Failed to lauch opsml server")?;
 
             Ok(())
         }
