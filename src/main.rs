@@ -54,7 +54,7 @@ enum Commands {
     /// opsml-cli compare-model-metrics
     CompareModelMetrics(CompareMetricArgs),
 
-    /// List opsml-cli version
+    ///  Show opsml-cli version
     ///
     /// # Example
     ///
