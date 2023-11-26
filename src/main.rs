@@ -63,6 +63,13 @@ enum Commands {
     ///
     /// opsml-cli version
     Version,
+
+    ///  Show opsml-cli info
+    ///
+    /// # Example
+    ///
+    /// opsml-cli info
+    Info,
 }
 
 fn main() -> Result<()> {
@@ -166,6 +173,33 @@ fn main() -> Result<()> {
                 "opsml-cli version {}",
                 env!("CARGO_PKG_VERSION").bold().green()
             );
+            Ok(())
+        }
+
+        // subcommand for listing opsml-cli info
+        Some(Commands::Info) => {
+            let logo_text = "
+                 ██████  ██████  ███████ ███    ███ ██             ██████ ██      ██ 
+                ██    ██ ██   ██ ██      ████  ████ ██            ██      ██      ██ 
+                ██    ██ ██████  ███████ ██ ████ ██ ██      █████ ██      ██      ██ 
+                ██    ██ ██           ██ ██  ██  ██ ██            ██      ██      ██ 
+                 ██████  ██      ███████ ██      ██ ███████        ██████ ███████ ██ 
+           "
+            .green();
+
+            println!(
+                "
+
+                {}
+
+                opsml-cli version {}
+                2023 Shipt, Inc.
+
+                ",
+                logo_text,
+                env!("CARGO_PKG_VERSION").bold().purple(),
+            );
+
             Ok(())
         }
 
