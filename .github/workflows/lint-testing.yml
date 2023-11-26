@@ -58,17 +58,19 @@ jobs:
         run : |
           make setup.project
         
-      - name: Run cargo tests # need to activate venv so rust picks up the correct python env
+      - name: Run cargo tests # need to activate venv so rust picks up the correct python env. Not running python test on windows
         run: |
           if [ "RUNNER_OS" != "Windows" ]; then
             source .venv/bin/activate
+            make format
+            make lints
+            make test.all
           else
-            .venv\Scripts\activate.bat
+            make format
+            make lints
+            make test.unit
           fi
-          source .venv/bin/activate
-          make format
-          make lints
-          make test.all
+
         shell: bash
         env:
           RUST_BACKTRACE: 1
