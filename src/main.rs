@@ -61,6 +61,13 @@ enum Commands {
     ///
     /// opsml-cli launch-uvicorn-app
     LaunchUvicornApp(LaunchAppArgs),
+
+    /// List opsml-cli version
+    ///
+    /// # Example
+    ///
+    /// opsml-cli version
+    Version,
 }
 
 fn main() -> Result<()> {
@@ -152,6 +159,12 @@ fn main() -> Result<()> {
         Some(Commands::LaunchUvicornApp(args)) => {
             launch_app(args.port, args.login).with_context(|| "Failed to lauch opsml server")?;
 
+            Ok(())
+        }
+
+        // subcommand for listing opsml-cli version
+        Some(Commands::Version) => {
+            println!("opsml-cli version {}", env!("CARGO_PKG_VERSION"));
             Ok(())
         }
 
