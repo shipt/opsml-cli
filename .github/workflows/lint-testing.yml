@@ -29,8 +29,6 @@ jobs:
     runs-on: ${{ matrix.os }}-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install poetry
-        run: pipx install poetry==${{ matrix.poetry-version }}
 
       - name: Set up Rust
         run: rustup override set stable && rustup update
@@ -43,25 +41,11 @@ jobs:
         with:
           key: ${{ matrix.os }}-${{ matrix.python-version }}-v1
 
-      - name: set up python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-          cache: 'poetry'
-
-
-      - name: Install dependencies
-        run : |
-          poetry export --format=requirements.txt > requirements.txt
-          pip install -r requirements.txt
-          pip install maturin
-          echo "PYTHONPATH=$PYTHONPATH" >> $GITHUB_ENV
-
-      - name: Run cargo tests # need to activate venv so rust picks up the correct python env. Not running python test on windows
+      - name: Run cargo tests # not running launch test due to python issues in github actions
         run: |
           make format
           make lints
-          make test.all
+          make test.unit
         env:
           RUST_BACKTRACE: 1
 
