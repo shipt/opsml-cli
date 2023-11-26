@@ -12,7 +12,6 @@ struct AppArgs {
 }
 
 pub fn launch_app(port: i32, login: bool) -> Result<(), anyhow::Error> {
-    pyo3::prepare_freethreaded_python();
     Python::with_gil(|py| {
         let app_args = AppArgs { port, login };
         let app_args = PyCell::new(py, app_args).unwrap();
