@@ -4,7 +4,6 @@ use api::command_structs::{
 };
 use api::download_file::download_model;
 use api::download_file::download_model_metadata;
-use api::launch_app::launch_app;
 use api::list_cards::list_cards;
 use api::metrics::{compare_model_metrics, get_model_metrics};
 mod api;
