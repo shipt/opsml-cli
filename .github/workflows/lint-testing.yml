@@ -39,7 +39,7 @@ jobs:
         with:
           key: ${{ matrix.os }}-v1
 
-      - name: Run cargo tests # not running launch test due to python issues in github actions
+      - name: Run cargo tests
         run: |
           make format
           make lints
