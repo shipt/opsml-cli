@@ -1,6 +1,7 @@
 use crate::api::types;
 use crate::api::utils;
 use anyhow::{Context, Result};
+use owo_colors::OwoColorize;
 use serde_json;
 use std::collections::HashMap;
 use tabled::settings::style::Style;
@@ -129,6 +130,13 @@ pub async fn list_cards(
 
     if response.status().is_success() {
         let card_table = parse_list_response(&response.text().await.unwrap());
+
+        print!(
+            "{}",
+            format!("Listing cards from {} registry", registry.to_string())
+                .bold()
+                .green()
+        );
         println!("{}", card_table?);
         Ok(())
     } else {
