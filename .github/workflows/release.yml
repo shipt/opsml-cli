@@ -64,11 +64,11 @@ jobs:
 
   build-ubuntu:
     needs: [rust-lints-test]
-    name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }}
+    name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }} - ${{ matrix.interpreter || 'all' }} - ${{ matrix.manylinux}}
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64, x86, aarch64, armv7, s390x, ppc64le, i686]
+        target: [x86_64, x86, aarch64, armv7, s390x, ppc64le]
         manylinux: [auto]
 
     runs-on: ubuntu-latest
@@ -116,7 +116,7 @@ jobs:
 
   build-ubuntu-musllinux:
     needs: [rust-lints-test]
-    name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }}
+    name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }} - ${{ matrix.interpreter || 'all' }} - ${{ matrix.manylinux}}
     strategy:
       fail-fast: false
       matrix:
@@ -168,11 +168,12 @@ jobs:
 
   build-macos:
     needs: [rust-lints-test]
-    name: build - macos - (${{ matrix.target }} - auto
+    name: build - macos - (${{ matrix.target }} - ${{ matrix.interpreter || 'all' }} - ${{ matrix.manylinux}}
     strategy:
       fail-fast: false
       matrix:
         target: [x86_64, aarch64]
+        manylinux: [auto]
 
     runs-on: macos-latest
     steps:
@@ -204,7 +205,7 @@ jobs:
 
   build-windows:
     needs: [rust-lints-test]
-    name: build on ${{ matrix.os }} (${{ matrix.target }} - ${{ matrix.interpreter || 'all' }}${{ matrix.os == 'linux' && format(' - {0}', matrix.manylinux == 'auto' && 'manylinux' || matrix.manylinux) || '' }})
+    name: build - windows -(${{ matrix.target }} - ${{ matrix.interpreter || 'all' }} - ${{ matrix.python-architecture}}
     strategy:
       fail-fast: false
       matrix:
@@ -216,14 +217,9 @@ jobs:
             interpreter: 3.8 3.9 3.10 3.11
           - target: x64
             python-architecture: x64
-            interpreter: 3.8 3.9 3.10 3.11
-          - target: x86
-            python-architecture: x86
-            interpreter: 3.8 3.9 3.10 3.11
+            interpreter: 3.8 3.9 3.10 3.11 pypy3.8 pypy3.9 pypy3.10
           - target: aarch64
             interpreter: 3.11
-          - target: x86_64
-            interpreter: pypy3.8 pypy3.9 pypy3.10
         exclude:
           - target: x86
           - target: x64
