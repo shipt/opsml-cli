@@ -19,7 +19,6 @@ build-backend = "maturin"
 [tool.maturin]
 bindings = "bin" 
 strip = true 
-features = ["pyo3/extension-module"] # https://pyo3.rs/v0.20.0/features#extension-module
 
 [project]
 name = "opsml-cli"
