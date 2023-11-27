@@ -125,6 +125,7 @@ pub async fn get_model_metrics(
 
     if response.status().is_success() {
         let metric_table = parse_metric_response(&response.text().await?);
+        println!("\nModel Metrics");
         println!("{}", metric_table);
         Ok(())
     } else {
