@@ -315,59 +315,19 @@ mod tests {
     use uuid::Uuid;
 
     #[tokio::test]
-    async fn test_download_metadata() {
-        let mut server = mockito::Server::new();
-        let url = server.url();
+    async fn test_download_model() {
+        let mut download_server = mockito::Server::new();
+        let url = download_server.url();
 
         env::set_var("OPSML_TRACKING_URI", url);
         // read mock response object
         let path = "./src/api/test_utils/metadata_non_onnx.json";
         let data = fs::read_to_string(path).expect("Unable to read file");
         let mock_metadata: types::ModelMetadata = serde_json::from_str(&data).unwrap();
-
-        let unique_name = Uuid::new_v4().to_string();
-        let new_path = format!("./src/api/test_utils/{}_mock_response.json", unique_name);
-
-        // Create a mock server
-        let mock = server
-            .mock("POST", "/opsml/models/metadata")
-            .with_status(201)
-            .with_body(data)
-            .create();
-
-        let downloader = ModelDownloader {
-            name: Some("name"),
-            version: Some("version"),
-            uid: None,
-            write_dir: &new_path,
-            ignore_release_candidates: &false,
-            onnx: &false,
-            no_onnx: &false,
-        };
-        let model_metadata = downloader.get_metadata().await.unwrap();
-
-        // assert structs are the same
-        assert_json_eq!(mock_metadata, model_metadata);
-
-        mock.assert();
-        // clean up
-        fs::remove_dir_all(&new_path).unwrap();
-    }
-
-    #[tokio::test]
-    async fn test_download_model() {
-        let mut server = mockito::Server::new();
-        let url = server.url();
-
-        env::set_var("OPSML_TRACKING_URI", url);
-        // read mock response object
-        let path = "./src/api/test_utils/metadata_non_onnx.json";
-        let data = fs::read_to_string(path).expect("Unable to read file");
-
         let new_dir = format!("./src/api/test_utils/{}", Uuid::new_v4());
 
         // mock metadata
-        let mock_metadata_path = server
+        let mock_metadata_path = download_server
             .mock("POST", "/opsml/models/metadata")
             .with_status(201)
             .with_body(&data)
@@ -376,7 +336,7 @@ mod tests {
         // mock model
 
         let get_path = "/opsml/files/download?read_path=model.pkl";
-        let mock_model_path = server
+        let mock_model_path = download_server
             .mock("GET", get_path)
             .with_status(201)
             .with_body(&data)
@@ -392,12 +352,16 @@ mod tests {
             no_onnx: &true,
         };
 
+        let model_metadata = downloader.get_metadata().await.unwrap();
+        mock_metadata_path.assert();
+
+        // assert structs are the same
+        assert_json_eq!(mock_metadata, model_metadata);
         downloader.download_model().await.unwrap();
 
         mock_model_path.assert();
-        mock_metadata_path.assert();
 
         // clean up
-        fs::remove_dir_all(&new_dir).unwrap();
+        //fs::remove_dir_all(&new_dir).unwrap();
     }
 }
