@@ -6,20 +6,20 @@ use serde_json::Value;
 use std::collections::HashMap;
 use tabled::Tabled;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ListTableRequest {
-    pub registry_type: String,
-    pub name: Option<String>,
-    pub team: Option<String>,
-    pub version: Option<String>,
-    pub uid: Option<String>,
-    pub limit: Option<i16>,
-    pub tags: Option<HashMap<String, String>>,
-    pub max_date: Option<String>,
-    pub ignore_release_candidates: bool,
+#[derive(Debug, Serialize)]
+pub struct ListTableRequest<'a> {
+    pub registry_type: &'a str,
+    pub name: Option<&'a str>,
+    pub team: Option<&'a str>,
+    pub version: Option<&'a str>,
+    pub uid: Option<&'a str>,
+    pub limit: Option<&'a i16>,
+    pub tags: &'a HashMap<String, String>,
+    pub max_date: Option<&'a str>,
+    pub ignore_release_candidates: &'a bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize)]
 pub struct CardRequest {
     pub name: Option<String>,
     pub version: Option<String>,
