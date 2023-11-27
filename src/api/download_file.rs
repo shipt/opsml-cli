@@ -362,6 +362,6 @@ mod tests {
         mock_model_path.assert();
 
         // clean up
-        //fs::remove_dir_all(&new_dir).unwrap();
+        fs::remove_dir_all(&new_dir).unwrap();
     }
 }
