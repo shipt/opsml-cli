@@ -1,6 +1,7 @@
 /// Copyright (c) Shipt, Inc.
 /// This source code is licensed under the MIT license found in the
 /// LICENSE file in the root directory of this source tree.
+/// use crate::api::types;
 use anyhow::Context;
 use lazy_static::lazy_static;
 use owo_colors::OwoColorize;
@@ -58,9 +59,9 @@ impl OpsmlPaths {
 }
 
 pub async fn check_args(
-    name: &Option<String>,
-    version: &Option<String>,
-    uid: &Option<String>,
+    name: Option<&str>,
+    version: Option<&str>,
+    uid: Option<&str>,
 ) -> Result<(), anyhow::Error> {
     let common_args = [name, version];
     let has_common = common_args.iter().all(|i| i.is_none());
