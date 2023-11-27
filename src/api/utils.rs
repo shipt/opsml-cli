@@ -1,6 +1,7 @@
 /// Copyright (c) Shipt, Inc.
 /// This source code is licensed under the MIT license found in the
 /// LICENSE file in the root directory of this source tree.
+/// use crate::api::types;
 use anyhow::Context;
 use lazy_static::lazy_static;
 use owo_colors::OwoColorize;
@@ -8,6 +9,8 @@ use reqwest::Url;
 use reqwest::{self, Response};
 use serde::Serialize;
 use std::env;
+
+use super::types;
 
 lazy_static! {
     static ref OPSML_TRACKING_URI: String = match env::var("OPSML_TRACKING_URI") {
@@ -57,15 +60,11 @@ impl OpsmlPaths {
     }
 }
 
-pub async fn check_args(
-    name: &Option<String>,
-    version: &Option<String>,
-    uid: &Option<String>,
-) -> Result<(), anyhow::Error> {
-    let common_args = [name, version];
+pub async fn check_args(args: &types::DownloadArgs) -> Result<(), anyhow::Error> {
+    let common_args = [args.name, args.version];
     let has_common = common_args.iter().all(|i| i.is_none());
 
-    let has_uid = uid.is_none();
+    let has_uid = args.uid.is_none();
 
     if has_common != has_uid {
         Ok(())
