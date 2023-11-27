@@ -56,7 +56,7 @@ jobs:
 
   build-ubuntu:
     needs: [rust-lints-test]
-    name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }} - ${{ matrix.interpreter || 'all' }} - ${{ matrix.manylinux}}
+    name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }} - ${{ matrix.manylinux}}
     strategy:
       fail-fast: false
       matrix:
@@ -108,7 +108,7 @@ jobs:
 
   build-ubuntu-musllinux:
     needs: [rust-lints-test]
-    name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }} - ${{ matrix.interpreter || 'all' }} - ${{ matrix.manylinux}}
+    name: build - ubuntu - ${{ matrix.manylinux }} - ${{ matrix.target }} - ${{ matrix.manylinux}}
     strategy:
       fail-fast: false
       matrix:
@@ -160,7 +160,7 @@ jobs:
 
   build-macos:
     needs: [rust-lints-test]
-    name: build - macos - (${{ matrix.target }} - ${{ matrix.interpreter || 'all' }} - ${{ matrix.manylinux}}
+    name: build - macos - (${{ matrix.target }} - ${{ matrix.manylinux}}
     strategy:
       fail-fast: false
       matrix:
