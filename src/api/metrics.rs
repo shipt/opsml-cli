@@ -7,96 +7,180 @@ use owo_colors::OwoColorize;
 use tabled::settings::style::Style;
 use tabled::{settings::Alignment, Table};
 
-fn parse_metric_response(response: &str) -> String {
-    // Parses response and creates a table
+struct MetricGetter {}
 
-    let metrics: types::ListMetricResponse =
-        serde_json::from_str(response).expect("Failed to load response to MetricResponse JSON");
+impl MetricGetter {
+    /// Parse metric response
+    ///
+    /// # Arguments
+    ///
+    /// * `response` - Response from server
+    ///
+    /// # Returns
+    ///  String - Table of metrics
+    ///
+    fn parse_metric_response(&self, response: &str) -> String {
+        // Parses response and creates a table
 
-    let mut metric_table: Vec<types::MetricTable> = Vec::new();
+        let metrics: types::ListMetricResponse =
+            serde_json::from_str(response).expect("Failed to load response to MetricResponse JSON");
 
-    for (_, metric_array) in metrics.metrics.iter() {
-        for metric in metric_array.iter() {
-            let step = if metric.step.is_some() {
-                metric.step.as_ref().unwrap().to_string()
-            } else {
-                "None".to_string()
-            };
+        let mut metric_table: Vec<types::MetricTable> = Vec::new();
 
-            let timestamp = if metric.timestamp.is_some() {
-                metric.timestamp.as_ref().unwrap().to_string()
-            } else {
-                "None".to_string()
-            };
-
-            metric_table.push(types::MetricTable {
-                metric: metric.name.clone(),
-                value: metric.value.clone(),
-                step,
-                timestamp,
-            });
-        }
-    }
-
-    let metric_table = Table::new(metric_table)
-        .with(Alignment::center())
-        .with(Style::sharp())
-        .to_string();
-
-    metric_table
-}
-
-fn parse_compare_metric_response(response: &str) -> String {
-    // Parses response and creates a table
-
-    let compare_report: types::CompareMetricResponse = serde_json::from_str(response)
-        .expect("Failed to load response to CompareMetricResponse JSON");
-
-    let mut builder = tabled::builder::Builder::default();
-    builder.set_header(vec![
-        "Champion Name",
-        "Champion Version",
-        "Metric",
-        "Champion Value",
-        "Challenger Value",
-        "Challenger Win",
-    ]);
-
-    let battle_reports = compare_report.report;
-    for (_, reports) in battle_reports.iter() {
-        for report in reports.iter() {
-            // champion and challenger should have metrics to render in table
-            if report.champion_metric.is_none() && report.challenger_metric.is_none() {
-                continue;
-            } else {
-                let challenger_metric = report.challenger_metric.as_ref().unwrap();
-                let champion_metric = report.champion_metric.as_ref().unwrap();
-                let mut record = vec![
-                    report.champion_name.clone(),
-                    report.champion_version.clone(),
-                    champion_metric.name.clone(),
-                    champion_metric.value.to_string(),
-                    challenger_metric.value.to_string(),
-                ];
-
-                if report.challenger_win {
-                    record.append(&mut vec!["true".green().to_string()]);
+        for (_, metric_array) in metrics.metrics.iter() {
+            for metric in metric_array.iter() {
+                let step = if metric.step.is_some() {
+                    metric.step.as_ref().unwrap().to_string()
                 } else {
-                    record.append(&mut vec!["false".red().to_string()]);
+                    "None".to_string()
                 };
-                // insert values
-                builder.push_record(record);
+
+                let timestamp = if metric.timestamp.is_some() {
+                    metric.timestamp.as_ref().unwrap().to_string()
+                } else {
+                    "None".to_string()
+                };
+
+                metric_table.push(types::MetricTable {
+                    metric: metric.name.clone(),
+                    value: metric.value.clone(),
+                    step,
+                    timestamp,
+                });
             }
         }
+
+        let metric_table = Table::new(metric_table)
+            .with(Alignment::center())
+            .with(Style::sharp())
+            .to_string();
+
+        metric_table
     }
 
-    let mut table = builder.build();
-    let compare_metric_table = table
-        .with(Alignment::center())
-        .with(Style::sharp())
-        .to_string();
+    fn parse_compare_metric_response(&self, response: &str) -> String {
+        // Parses response and creates a table
 
-    compare_metric_table
+        let compare_report: types::CompareMetricResponse = serde_json::from_str(response)
+            .expect("Failed to load response to CompareMetricResponse JSON");
+
+        let mut builder = tabled::builder::Builder::default();
+        builder.set_header(vec![
+            "Champion Name",
+            "Champion Version",
+            "Metric",
+            "Champion Value",
+            "Challenger Value",
+            "Challenger Win",
+        ]);
+
+        let battle_reports = compare_report.report;
+        for (_, reports) in battle_reports.iter() {
+            for report in reports.iter() {
+                // champion and challenger should have metrics to render in table
+                if report.champion_metric.is_none() && report.challenger_metric.is_none() {
+                    continue;
+                } else {
+                    let challenger_metric = report.challenger_metric.as_ref().unwrap();
+                    let champion_metric = report.champion_metric.as_ref().unwrap();
+                    let mut record = vec![
+                        report.champion_name.clone(),
+                        report.champion_version.clone(),
+                        champion_metric.name.clone(),
+                        champion_metric.value.to_string(),
+                        challenger_metric.value.to_string(),
+                    ];
+
+                    if report.challenger_win {
+                        record.append(&mut vec!["true".green().to_string()]);
+                    } else {
+                        record.append(&mut vec!["false".red().to_string()]);
+                    };
+                    // insert values
+                    builder.push_record(record);
+                }
+            }
+        }
+
+        let mut table = builder.build();
+        let compare_metric_table = table
+            .with(Alignment::center())
+            .with(Style::sharp())
+            .to_string();
+
+        compare_metric_table
+    }
+
+    /// Get model metrics
+    pub async fn get_model_metrics(
+        &self,
+        name: Option<&str>,
+        version: Option<&str>,
+        uid: Option<&str>,
+    ) -> Result<(), anyhow::Error> {
+        let model_metric_request = types::CardRequest { name, version, uid };
+
+        let response =
+            utils::make_post_request(&utils::OpsmlPaths::Metric.as_str(), &model_metric_request)
+                .await?;
+
+        if response.status().is_success() {
+            let metric_table = self.parse_metric_response(&response.text().await?);
+            println!("\nModel Metrics");
+            println!("{}", metric_table);
+            Ok(())
+        } else {
+            Err(anyhow::Error::msg(format!(
+                "Request failed {:?}",
+                response.error_for_status_ref()
+            )))
+        }
+    }
+
+    /// Compare model metrics
+    ///
+    /// # Arguments
+    ///
+    /// * `metric_name` - Name of the metric
+    /// * `lower_is_better` - Whether a lower value is better for the metric
+    /// * `challenger_uid` - Unique identifier of the challenger model
+    /// * `champion_uid` - Unique identifier of the champion model
+    ///
+    /// # Returns
+    ///
+    /// * `Result<(), anyhow::Error>` - Result of the request
+    pub async fn compare_model_metrics(
+        &self,
+        metric_name: &Vec<String>,
+        lower_is_better: &Vec<bool>,
+        challenger_uid: &str,
+        champion_uid: &Vec<String>,
+    ) -> Result<(), anyhow::Error> {
+        // set up repair request
+        let compare_metric_request = types::CompareMetricRequest {
+            metric_name,
+            lower_is_better,
+            challenger_uid,
+            champion_uid,
+        };
+
+        let response = utils::make_post_request(
+            &utils::OpsmlPaths::CompareMetric.as_str(),
+            &compare_metric_request,
+        )
+        .await?;
+
+        if response.status().is_success() {
+            let metric_table = self.parse_compare_metric_response(&response.text().await?);
+            println!("{}", metric_table);
+            Ok(())
+        } else {
+            Err(anyhow::Error::msg(format!(
+                "Request failed {:?}",
+                response.error_for_status_ref()
+            )))
+        }
+    }
 }
 
 /// List all metrics for a model
@@ -113,69 +197,43 @@ pub async fn get_model_metrics(
     version: Option<&str>,
     uid: Option<&str>,
 ) -> Result<(), anyhow::Error> {
-    let model_metric_request = types::CardRequest {
-        name: name.map(|s| s.to_string()),
-        version: version.map(|s| s.to_string()),
-        uid: uid.map(|s| s.to_string()),
-    };
-
-    let response =
-        utils::make_post_request(&utils::OpsmlPaths::Metric.as_str(), &model_metric_request)
-            .await?;
-
-    if response.status().is_success() {
-        let metric_table = parse_metric_response(&response.text().await?);
-        println!("\nModel Metrics");
-        println!("{}", metric_table);
-        Ok(())
-    } else {
-        Err(anyhow::Error::msg(format!(
-            "Request failed {:?}",
-            response.error_for_status_ref()
-        )))
-    }
+    let metric_getter = MetricGetter {};
+    metric_getter.get_model_metrics(name, version, uid).await
 }
 
 #[tokio::main]
 pub async fn compare_model_metrics(
-    metric_name: &[String],
-    lower_is_better: &[bool],
+    metric_name: &Vec<String>,
+    lower_is_better: &Vec<bool>,
     challenger_uid: &str,
-    champion_uid: &[String],
+    champion_uid: &Vec<String>,
 ) -> Result<(), anyhow::Error> {
     // set up repair request
-    let compare_metric_request = types::CompareMetricRequest {
-        metric_name: metric_name.to_owned(),
-        lower_is_better: lower_is_better.to_owned(),
-        challenger_uid: challenger_uid.to_string(),
-        champion_uid: champion_uid.to_owned(),
-    };
+    let compare_mertic = MetricGetter {};
 
-    let response = utils::make_post_request(
-        &utils::OpsmlPaths::CompareMetric.as_str(),
-        &compare_metric_request,
-    )
-    .await?;
-
-    if response.status().is_success() {
-        let metric_table = parse_compare_metric_response(&response.text().await.unwrap());
-        println!("{}", metric_table);
-        Ok(())
-    } else {
-        Err(anyhow::Error::msg(format!(
-            "Request failed {:?}",
-            response.error_for_status_ref()
-        )))
-    }
+    compare_mertic
+        .compare_model_metrics(metric_name, lower_is_better, challenger_uid, champion_uid)
+        .await
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
 
-    #[test]
-    fn test_parse_metric_response() {
+    use std::collections::HashMap;
+    use std::env;
+    use std::fs;
+    use tokio;
+
+    #[tokio::test]
+    async fn test_get_metrics() {
+        let mut server = mockito::Server::new();
+        let url = server.url();
+        let path = "./src/api/test_utils/list_metric.json";
+        let metric_data = fs::read_to_string(path).expect("Unable to read file");
+
+        env::set_var("OPSML_TRACKING_URI", url);
+
         let mut vec = Vec::new();
         let metric1 = types::Metric {
             name: "mae".to_string(),
@@ -193,13 +251,27 @@ mod tests {
         };
         vec.push(metric2);
 
+        let metric_getter = MetricGetter {};
+
+        // Create a mock server
+        let mock_get_metrics = server
+            .mock("POST", "/opsml/models/metrics")
+            .with_status(201)
+            .with_body(metric_data)
+            .create();
+
+        metric_getter
+            .get_model_metrics(Some("fake"), Some("1.0.0"), None)
+            .await
+            .unwrap();
+
         let mut metrics = HashMap::new();
         metrics.insert("test".to_string(), vec);
 
         let mock_response = types::ListMetricResponse { metrics };
         let string_response = serde_json::to_string(&mock_response).unwrap();
 
-        let metric_table = parse_metric_response(&string_response);
+        let metric_table = metric_getter.parse_metric_response(&string_response);
 
         assert_eq!(
             metric_table,
@@ -211,7 +283,38 @@ mod tests {
                 "│  mape  │ 10.0  │ None │   None    │\n",
                 "└────────┴───────┴──────┴───────────┘",
             )
-        )
+        );
+
+        mock_get_metrics.assert();
+    }
+
+    #[tokio::test]
+    async fn test_compare_metrics() {
+        let mut server = mockito::Server::new();
+        let url = server.url();
+        let path = "./src/api/test_utils/compare_metric.json";
+        let metric_data = fs::read_to_string(path).expect("Unable to read file");
+
+        env::set_var("OPSML_TRACKING_URI", url);
+
+        // Create a mock server
+        let mock_compare_metrics = server
+            .mock("POST", "/opsml/models/compare_metrics")
+            .with_status(201)
+            .with_body(metric_data)
+            .create();
+
+        let metric_compare = MetricGetter {};
+        metric_compare
+            .compare_model_metrics(
+                &vec!["mae".to_string(), "mape".to_string()],
+                &vec![false, true],
+                "uid",
+                &vec!["uid".to_string(), "uid".to_string()],
+            )
+            .await
+            .unwrap();
+        mock_compare_metrics.assert();
     }
 
     #[test]
@@ -255,13 +358,12 @@ mod tests {
 
         let mut report = HashMap::new();
         report.insert("test".to_string(), vec![battle_report, battle_report2]);
-        let compare_response = types::CompareMetricResponse {
+        let _ = types::CompareMetricResponse {
             challenger_name: "hootie-and-the-blowfish".to_string(),
             challenger_version: "1.0.0".to_string(),
             report,
         };
-        let string_response = serde_json::to_string(&compare_response).unwrap();
 
-        parse_compare_metric_response(&string_response);
+        //parse_compare_metric_response(&string_response);
     }
 }

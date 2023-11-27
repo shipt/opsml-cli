@@ -8,10 +8,7 @@ setup.project:
 	pip install maturin
 
 test.unit:
-	cargo test
-
-test.all:
-	cargo test -- --include-ignored
+	cargo test -- --test-threads=1
 
 format:
 	cargo fmt
