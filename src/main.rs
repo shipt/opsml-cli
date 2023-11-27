@@ -1,69 +1,15 @@
 /// Copyright (c) Shipt, Inc.
 /// This source code is licensed under the MIT license found in the
 /// LICENSE file in the root directory of this source tree.
-use api::command_structs::{
-    CompareMetricArgs, DownloadModelArgs, ListCards, ModelMetadataArgs, ModelMetricArgs,
-};
 use api::download_file::download_model;
 use api::download_file::download_model_metadata;
 use api::list_cards::list_cards;
 use api::metrics::{compare_model_metrics, get_model_metrics};
 mod api;
 use anyhow::{Context, Result};
-use clap::command;
+use api::cli::{Cli, Commands, LOGO_TEXT};
 use clap::Parser;
-use clap::Subcommand;
 use owo_colors::OwoColorize;
-
-#[derive(Parser)]
-#[command(about = "CLI tool for Interacting with an Opsml server")]
-
-struct Cli {
-    #[command(subcommand)]
-    command: Option<Commands>,
-}
-
-#[derive(Subcommand)]
-enum Commands {
-    /// Lists cards from a registry
-    ///
-    /// # Example
-    ///
-    /// opsml-cli list-cards --registry data
-    ListCards(ListCards),
-    /// Download model metadata from the model registry
-    ///
-    /// # Example
-    ///
-    /// opsml-cli download-model-metadata --name model_name --version 1.0.0
-    DownloadModelMetadata(ModelMetadataArgs),
-    /// Download a model and its metadata from the model registry
-    ///
-    /// # Example
-    ///
-    /// opsml-cli download-model --name model_name --version 1.0.0
-    /// opsml-cli download-model --name model_name --version 1.0.0 --no-onnx
-    DownloadModel(DownloadModelArgs),
-    /// Retrieve model metrics
-    ///
-    /// # Example
-    ///
-    /// opsml-cli get-model-metrics --name model_name --version 1.0.0
-    GetModelMetrics(ModelMetricArgs),
-    /// Compare model metrics
-    ///
-    /// # Example
-    ///
-    /// opsml-cli compare-model-metrics
-    CompareModelMetrics(CompareMetricArgs),
-
-    ///  Show opsml-cli version
-    ///
-    /// # Example
-    ///
-    /// opsml-cli version
-    Version,
-}
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -166,6 +112,17 @@ fn main() -> Result<()> {
                 "opsml-cli version {}",
                 env!("CARGO_PKG_VERSION").bold().green()
             );
+            Ok(())
+        }
+
+        // subcommand for listing opsml-cli info
+        Some(Commands::Info) => {
+            println!(
+                "\n{}\nopsml-cli version {}\n2023 Shipt, Inc.\n",
+                LOGO_TEXT.green(),
+                env!("CARGO_PKG_VERSION").bold().purple(),
+            );
+
             Ok(())
         }
 
