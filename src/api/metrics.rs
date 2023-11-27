@@ -7,13 +7,9 @@ use owo_colors::OwoColorize;
 use tabled::settings::style::Style;
 use tabled::{settings::Alignment, Table};
 
-struct MetricGetter<'a> {
-    pub name: Option<&'a str>,
-    pub version: Option<&'a str>,
-    pub uid: Option<&'a str>,
-}
+struct MetricGetter {}
 
-impl MetricGetter<'_> {
+impl MetricGetter {
     /// Parse metric response
     ///
     /// # Arguments
@@ -116,12 +112,13 @@ impl MetricGetter<'_> {
     }
 
     /// Get model metrics
-    pub async fn get_model_metrics(&self) -> Result<(), anyhow::Error> {
-        let model_metric_request = types::CardRequest {
-            name: self.name,
-            version: self.version,
-            uid: self.uid,
-        };
+    pub async fn get_model_metrics(
+        &self,
+        name: Option<&str>,
+        version: Option<&str>,
+        uid: Option<&str>,
+    ) -> Result<(), anyhow::Error> {
+        let model_metric_request = types::CardRequest { name, version, uid };
 
         let response =
             utils::make_post_request(&utils::OpsmlPaths::Metric.as_str(), &model_metric_request)
@@ -200,8 +197,8 @@ pub async fn get_model_metrics(
     version: Option<&str>,
     uid: Option<&str>,
 ) -> Result<(), anyhow::Error> {
-    let metric_getter = MetricGetter { name, version, uid };
-    metric_getter.get_model_metrics().await
+    let metric_getter = MetricGetter {};
+    metric_getter.get_model_metrics(name, version, uid).await
 }
 
 #[tokio::main]
@@ -212,11 +209,7 @@ pub async fn compare_model_metrics(
     champion_uid: &Vec<String>,
 ) -> Result<(), anyhow::Error> {
     // set up repair request
-    let compare_mertic = MetricGetter {
-        name: None,
-        version: None,
-        uid: None,
-    };
+    let compare_mertic = MetricGetter {};
 
     compare_mertic
         .compare_model_metrics(metric_name, lower_is_better, challenger_uid, champion_uid)
@@ -258,11 +251,7 @@ mod tests {
         };
         vec.push(metric2);
 
-        let metric_getter = MetricGetter {
-            name: Some("fake"),
-            version: Some("1.0.0"),
-            uid: None,
-        };
+        let metric_getter = MetricGetter {};
 
         // Create a mock server
         let mock_get_metrics = server
@@ -271,7 +260,10 @@ mod tests {
             .with_body(metric_data)
             .create();
 
-        metric_getter.get_model_metrics().await.unwrap();
+        metric_getter
+            .get_model_metrics(Some("fake"), Some("1.0.0"), None)
+            .await
+            .unwrap();
 
         let mut metrics = HashMap::new();
         metrics.insert("test".to_string(), vec);
@@ -297,7 +289,33 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_compare_metrics() {}
+    async fn test_compare_metrics() {
+        let mut server = mockito::Server::new();
+        let url = server.url();
+        let path = "./src/api/test_utils/compare_metric.json";
+        let metric_data = fs::read_to_string(path).expect("Unable to read file");
+
+        env::set_var("OPSML_TRACKING_URI", url);
+
+        // Create a mock server
+        let mock_compare_metrics = server
+            .mock("POST", "/opsml/models/compare_metrics")
+            .with_status(201)
+            .with_body(metric_data)
+            .create();
+
+        let metric_compare = MetricGetter {};
+        metric_compare
+            .compare_model_metrics(
+                &vec!["mae".to_string(), "mape".to_string()],
+                &vec![false, true],
+                "uid",
+                &vec!["uid".to_string(), "uid".to_string()],
+            )
+            .await
+            .unwrap();
+        mock_compare_metrics.assert();
+    }
 
     #[test]
     fn test_parse_compare_metric_response() {
@@ -340,12 +358,11 @@ mod tests {
 
         let mut report = HashMap::new();
         report.insert("test".to_string(), vec![battle_report, battle_report2]);
-        let compare_response = types::CompareMetricResponse {
+        let _ = types::CompareMetricResponse {
             challenger_name: "hootie-and-the-blowfish".to_string(),
             challenger_version: "1.0.0".to_string(),
             report,
         };
-        let string_response = serde_json::to_string(&compare_response).unwrap();
 
         //parse_compare_metric_response(&string_response);
     }
