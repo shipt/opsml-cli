@@ -2,7 +2,7 @@
 
 [![Lints-Tests](https://github.com/shipt/opsml-cli/actions/workflows/lint-testing.yml/badge.svg)](https://github.com/shipt/opsml-cli/actions/workflows/lint-testing.yml)
 
-This package provides python-installable CLI written in `Rust` for interacting with [opsml](https://github.com/shipt/opsml).
+This package provides a python-installable CLI written in `Rust` for interacting with [opsml](https://github.com/shipt/opsml).
 
 ## Installation
 
