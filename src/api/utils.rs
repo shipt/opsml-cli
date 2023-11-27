@@ -10,8 +10,6 @@ use reqwest::{self, Response};
 use serde::Serialize;
 use std::env;
 
-use super::types;
-
 lazy_static! {
     static ref OPSML_TRACKING_URI: String = match env::var("OPSML_TRACKING_URI") {
         Ok(val) =>
