@@ -20,10 +20,10 @@ pub struct ListTableRequest<'a> {
 }
 
 #[derive(Debug, Serialize)]
-pub struct CardRequest {
-    pub name: Option<String>,
-    pub version: Option<String>,
-    pub uid: Option<String>,
+pub struct CardRequest<'a> {
+    pub name: Option<&'a str>,
+    pub version: Option<&'a str>,
+    pub uid: Option<&'a str>,
 }
 
 #[derive(Serialize)]
@@ -117,12 +117,12 @@ pub struct ModelMetadata {
     pub data_schema: DataSchema,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct CompareMetricRequest {
-    pub metric_name: Vec<String>,
-    pub lower_is_better: Vec<bool>,
-    pub challenger_uid: String,
-    pub champion_uid: Vec<String>,
+#[derive(Debug, Serialize)]
+pub struct CompareMetricRequest<'a> {
+    pub metric_name: &'a Vec<String>,
+    pub lower_is_better: &'a Vec<bool>,
+    pub challenger_uid: &'a str,
+    pub champion_uid: &'a Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

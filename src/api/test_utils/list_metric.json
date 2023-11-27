@@ -1,0 +1,12 @@
+{
+    "metrics": {
+        "mae": [
+            {
+                "name": "mae",
+                "value": 5,
+                "step": null,
+                "timestamp": null
+            }
+        ]
+    }
+}
