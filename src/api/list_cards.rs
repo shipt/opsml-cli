@@ -285,7 +285,7 @@ mod tests {
         let data = fs::read_to_string(path).expect("Unable to read file");
 
         // Create a mock server
-        let _ = server
+        let mock = server
             .mock("POST", "/opsml/cards/list")
             .with_status(201)
             .with_body(data)
@@ -296,5 +296,7 @@ mod tests {
         )
         .await
         .unwrap();
+
+        mock.assert();
     }
 }

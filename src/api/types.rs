@@ -6,8 +6,8 @@ use serde_json::Value;
 use std::collections::HashMap;
 use tabled::Tabled;
 
-pub struct DownloadArgs {
-    pub name: Option<&'static str>,
+pub struct DownloadArgs<'a> {
+    pub name: Option<&'a str>,
     pub version: Option<&'static str>,
     pub uid: Option<&'static str>,
     pub write_dir: &'static str,

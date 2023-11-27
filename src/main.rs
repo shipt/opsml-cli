@@ -37,11 +37,11 @@ fn main() -> Result<()> {
         // subcommand for downloading model metadata
         Some(Commands::DownloadModelMetadata(args)) => {
             download_model_metadata(
-                args.name.clone(),
-                args.version.clone(),
-                args.uid.clone(),
+                args.name.as_deref(),
+                args.version.as_deref(),
+                args.uid.as_deref(),
                 &args.write_dir,
-                args.ignore_release_candidates,
+                &args.ignore_release_candidates,
             )
             .with_context(|| {
                 format!(
@@ -55,13 +55,13 @@ fn main() -> Result<()> {
         // subcommand for downloading a model
         Some(Commands::DownloadModel(args)) => {
             download_model(
-                args.name.clone(),
-                args.version.clone(),
-                args.uid.clone(),
-                &args.write_dir.clone(),
-                args.no_onnx,
-                args.onnx,
-                args.ignore_release_candidates,
+                args.name.as_deref(),
+                args.version.as_deref(),
+                args.uid.as_deref(),
+                &args.write_dir,
+                &args.no_onnx,
+                &args.onnx,
+                &args.ignore_release_candidates,
             )
             .with_context(|| {
                 format!(

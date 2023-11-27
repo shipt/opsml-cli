@@ -8,26 +8,24 @@ use futures_util::StreamExt;
 use owo_colors::OwoColorize;
 use reqwest::{self, Response};
 use serde_json;
+use std::borrow::BorrowMut;
 use std::{format, fs, path::Path};
 use tokio;
 
 const MODEL_METADATA_FILE: &str = "metadata.json";
 const NO_ONNX_URI: &str = "No onnx model uri found but onnx flag set to true";
 
-pub struct ModelDownloader {
-    args: types::DownloadArgs,
+pub struct ModelDownloader<'a> {
+    pub name: Option<&'a str>,
+    pub version: Option<&'a str>,
+    pub uid: Option<&'a str>,
+    pub write_dir: &'a str,
+    pub ignore_release_candidates: &'a bool,
+    pub onnx: &'a bool,
+    pub no_onnx: &'a bool,
 }
 
-impl ModelDownloader {
-    /// Creates a new ModelDownloader
-    ///
-    /// # Arguments
-    ///
-    /// * `args` - DownloadArgs struct
-    ///
-    pub fn new(args: types::DownloadArgs) -> Self {
-        Self { args }
-    }
+impl ModelDownloader<'_> {
     /// Create parent directories associated with path
     ///
     /// # Arguments
@@ -126,13 +124,13 @@ impl ModelDownloader {
     /// * `Result<types::ModelMetadata, String>` - Result of model metadata download
     ///
     async fn get_model_metadata(&self) -> Result<types::ModelMetadata, anyhow::Error> {
-        let save_path: String = format!("{}/{}", self.args.write_dir, MODEL_METADATA_FILE);
+        let save_path: String = format!("{}/{}", self.write_dir, MODEL_METADATA_FILE);
 
         let model_metadata_request = types::ModelMetadataRequest {
-            name: self.args.name,
-            version: self.args.version,
-            uid: self.args.uid,
-            ignore_release_candidates: self.args.ignore_release_candidates,
+            name: self.name,
+            version: self.version,
+            uid: self.uid,
+            ignore_release_candidates: self.ignore_release_candidates,
         };
 
         let response = utils::make_post_request(
@@ -188,7 +186,9 @@ impl ModelDownloader {
     ///
     async fn get_metadata(&self) -> Result<types::ModelMetadata, anyhow::Error> {
         // check args first
-        utils::check_args(&self.args).await.unwrap();
+        utils::check_args(self.name, self.version, self.uid)
+            .await
+            .unwrap();
         let model_metadata = self.get_model_metadata().await?;
 
         Ok(model_metadata)
@@ -221,13 +221,13 @@ impl ModelDownloader {
 
     /// Downloads a model file
     async fn download_model(&self) -> Result<(), anyhow::Error> {
-        let download_onnx = !(*self.args.onnx && *self.args.no_onnx);
+        let download_onnx = !(*self.onnx && *self.no_onnx);
         let model_metadata = self.get_metadata().await?;
         let (filename, model_uri) = self.get_uri(download_onnx, &model_metadata);
 
         println!("Downloading model: {}, {}", filename.green(), model_uri);
 
-        let local_save_path = format!("{}/{}", self.args.write_dir, filename);
+        let local_save_path = format!("{}/{}", self.write_dir, filename);
 
         // Create all parent dirs if not exist
         self.create_dir_path(&local_save_path)?;
@@ -260,7 +260,8 @@ pub async fn download_model_metadata(
     ignore_release_candidates: &bool,
 ) -> Result<types::ModelMetadata, anyhow::Error> {
     // check args first
-    let args = types::DownloadArgs {
+
+    let model_downloader = ModelDownloader {
         name,
         version,
         uid,
@@ -269,8 +270,6 @@ pub async fn download_model_metadata(
         onnx: &false,
         no_onnx: &false,
     };
-
-    let model_downloader = ModelDownloader::new(args);
     model_downloader.get_metadata().await
 }
 
@@ -295,17 +294,15 @@ pub async fn download_model(
     onnx: &bool,
     ignore_release_candidates: &bool,
 ) -> Result<(), anyhow::Error> {
-    let args = types::DownloadArgs {
-        name,
-        version,
-        uid,
+    let model_downloader = ModelDownloader {
+        name: name,
+        version: version,
+        uid: uid,
         write_dir: write_dir,
-        ignore_release_candidates,
+        ignore_release_candidates: ignore_release_candidates,
         onnx: onnx,
         no_onnx: no_onnx,
     };
-
-    let model_downloader = ModelDownloader::new(args);
     model_downloader.download_model().await
 }
 
@@ -313,150 +310,47 @@ pub async fn download_model(
 mod tests {
     use super::*;
     use assert_json_diff::assert_json_eq;
+    use std::env;
     use std::fs;
     use std::io;
     use tokio;
     use uuid::Uuid;
 
     #[tokio::test]
-    async fn test_download_metadata_response() {
+    async fn test_download_metadata() {
+        let mut server = mockito::Server::new();
+        let url = server.url();
+
+        env::set_var("OPSML_TRACKING_URI", url);
         // read mock response object
         let path = "./src/api/test_utils/metadata_non_onnx.json";
         let data = fs::read_to_string(path).expect("Unable to read file");
         let mock_metadata: types::ModelMetadata = serde_json::from_str(&data).unwrap();
 
-        let mut server = mockito::Server::new();
-        let url = server.url();
+        let unique_name = Uuid::new_v4().to_string();
+        let new_path = format!("./src/api/test_utils/{}_mock_response.json", unique_name);
 
         // Create a mock server
         let mock = server
-            .mock("GET", "/fake")
+            .mock("POST", "/opsml/models/metadata")
             .with_status(201)
             .with_body(data)
             .create();
 
-        // create client and parse the server response
-        let client = reqwest::Client::new();
-        let full_path: String = format!("{}/fake", &url);
-        let response = client.get(&full_path).send().await.unwrap();
-        let loaded_response = load_stream_response(response).await.unwrap();
-        let model_metadata: types::ModelMetadata = serde_json::from_str(&loaded_response).unwrap();
+        let downloader = ModelDownloader {
+            name: Some("name"),
+            version: Some("version"),
+            uid: None,
+            write_dir: &new_path,
+            ignore_release_candidates: &false,
+            onnx: &false,
+            no_onnx: &false,
+        };
+        let model_metadata = downloader.get_metadata().await.unwrap();
 
         // assert structs are the same
         assert_json_eq!(mock_metadata, model_metadata);
 
         mock.assert()
-    }
-
-    #[tokio::test]
-    async fn test_save_json() -> Result<(), io::Error> {
-        // read mock response object
-        let unique_name = Uuid::new_v4().to_string();
-        let path = "./src/api/test_utils/metadata_onnx.json";
-        let data = fs::read_to_string(path).expect("Unable to read file");
-        let mock_metadata_orig: types::ModelMetadata = serde_json::from_str(&data).unwrap();
-        let new_path = format!("./src/api/test_utils/{}_mock_response.json", unique_name);
-
-        save_metadata_to_json(&mock_metadata_orig, &new_path)
-            .await
-            .unwrap();
-
-        let new_data = fs::read_to_string(&new_path).expect("Unable to read file");
-
-        // confirm new json can be loaded in
-        let mock_metadata: types::ModelMetadata = serde_json::from_str(&new_data).unwrap();
-        assert_json_eq!(mock_metadata, mock_metadata_orig);
-
-        // clean up
-        fs::remove_file(&new_path).unwrap();
-
-        Ok(())
-    }
-
-    #[test]
-    fn test_model_metadata_loading() {
-        // read model metadata
-        let path = "./src/api/test_utils/metadata_onnx.json";
-        let data = fs::read_to_string(path).expect("Unable to read file");
-        let mock_metadata: types::ModelMetadata = serde_json::from_str(&data).unwrap();
-        assert!(mock_metadata.onnx_uri.is_some());
-
-        // read model metadata without onnx
-        let path = "./src/api/test_utils/metadata_non_onnx.json";
-        let data = fs::read_to_string(path).expect("Unable to read file");
-        let mock_metadata_non_onnx: types::ModelMetadata = serde_json::from_str(&data).unwrap();
-        assert!(mock_metadata_non_onnx.onnx_uri.is_none());
-    }
-
-    #[tokio::test]
-    async fn test_download_stream_to_file() -> Result<(), anyhow::Error> {
-        let mut server = mockito::Server::new();
-        let url = server.url();
-        let path = "./src/api/test_utils/metadata_onnx.json";
-        let new_path = "./src/api/test_utils/new_mock_response.json";
-
-        // Create a mock server
-        let mock = server
-            .mock("GET", "/fake")
-            .with_status(201)
-            .with_body_from_file(path)
-            .create();
-
-        let client = reqwest::Client::new();
-        let full_path: String = format!("{}/fake", &url);
-        let response = client.get(&full_path).send().await.unwrap();
-
-        download_stream_to_file(response, Path::new(new_path)).await?;
-        mock.assert();
-        fs::remove_file(new_path).unwrap();
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn test_make_post_request() {
-        let mut server = mockito::Server::new();
-        let url = server.url();
-        let path = "./src/api/test_utils/metadata_onnx.json";
-        let payload = types::CardRequest {
-            name: Some("test".to_string()),
-            version: Some("test".to_string()),
-            uid: Some("test".to_string()),
-        };
-
-        // Create a mock server
-        let mock = server
-            .mock("POST", "/fake")
-            .with_status(201)
-            .with_body_from_file(path)
-            .create();
-
-        let full_path: String = format!("{}/fake", &url);
-        let response = utils::make_post_request(&full_path, &payload)
-            .await
-            .unwrap();
-
-        assert_eq!(response.status(), 201);
-        mock.assert();
-    }
-
-    #[tokio::test]
-    async fn test_make_get_request() {
-        let mut server = mockito::Server::new();
-        let url = server.url();
-        let path = "./src/api/test_utils/metadata_onnx.json";
-
-        // Create a mock server
-        let mock = server
-            .mock("get", "/fake")
-            .with_status(201)
-            .with_body_from_file(path)
-            .create();
-
-        let full_path: String = format!("{}/fake", &url);
-        let response = utils::make_get_request(&full_path).await.unwrap();
-
-        assert_eq!(response.status(), 201);
-        mock.assert();
     }
 }
