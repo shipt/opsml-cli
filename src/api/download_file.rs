@@ -8,7 +8,6 @@ use futures_util::StreamExt;
 use owo_colors::OwoColorize;
 use reqwest::{self, Response};
 use serde_json;
-use std::borrow::BorrowMut;
 use std::{format, fs, path::Path};
 use tokio;
 
@@ -221,7 +220,7 @@ impl ModelDownloader<'_> {
 
     /// Downloads a model file
     async fn download_model(&self) -> Result<(), anyhow::Error> {
-        let download_onnx = !(*self.onnx && *self.no_onnx);
+        let download_onnx = !(self.no_onnx); //if no_onnx is true, download_onnx is false
         let model_metadata = self.get_metadata().await?;
         let (filename, model_uri) = self.get_uri(download_onnx, &model_metadata);
 
@@ -265,7 +264,7 @@ pub async fn download_model_metadata(
         name,
         version,
         uid,
-        write_dir: write_dir,
+        write_dir,
         ignore_release_candidates,
         onnx: &false,
         no_onnx: &false,
@@ -295,13 +294,13 @@ pub async fn download_model(
     ignore_release_candidates: &bool,
 ) -> Result<(), anyhow::Error> {
     let model_downloader = ModelDownloader {
-        name: name,
-        version: version,
-        uid: uid,
-        write_dir: write_dir,
-        ignore_release_candidates: ignore_release_candidates,
-        onnx: onnx,
-        no_onnx: no_onnx,
+        name,
+        version,
+        uid,
+        write_dir,
+        ignore_release_candidates,
+        onnx,
+        no_onnx,
     };
     model_downloader.download_model().await
 }
@@ -312,7 +311,6 @@ mod tests {
     use assert_json_diff::assert_json_eq;
     use std::env;
     use std::fs;
-    use std::io;
     use tokio;
     use uuid::Uuid;
 
@@ -351,6 +349,55 @@ mod tests {
         // assert structs are the same
         assert_json_eq!(mock_metadata, model_metadata);
 
-        mock.assert()
+        mock.assert();
+        // clean up
+        fs::remove_dir_all(&new_path).unwrap();
+    }
+
+    #[tokio::test]
+    async fn test_download_model() {
+        let mut server = mockito::Server::new();
+        let url = server.url();
+
+        env::set_var("OPSML_TRACKING_URI", url);
+        // read mock response object
+        let path = "./src/api/test_utils/metadata_non_onnx.json";
+        let data = fs::read_to_string(path).expect("Unable to read file");
+
+        let new_dir = format!("./src/api/test_utils/{}", Uuid::new_v4());
+
+        // mock metadata
+        let mock_metadata_path = server
+            .mock("POST", "/opsml/models/metadata")
+            .with_status(201)
+            .with_body(&data)
+            .create();
+
+        // mock model
+
+        let get_path = "/opsml/files/download?read_path=model.pkl";
+        let mock_model_path = server
+            .mock("GET", get_path)
+            .with_status(201)
+            .with_body(&data)
+            .create();
+
+        let downloader = ModelDownloader {
+            name: Some("name"),
+            version: Some("version"),
+            uid: None,
+            write_dir: &new_dir,
+            ignore_release_candidates: &false,
+            onnx: &false,
+            no_onnx: &true,
+        };
+
+        downloader.download_model().await.unwrap();
+
+        mock_model_path.assert();
+        mock_metadata_path.assert();
+
+        // clean up
+        fs::remove_dir_all(&new_dir).unwrap();
     }
 }

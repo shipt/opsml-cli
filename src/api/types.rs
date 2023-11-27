@@ -6,16 +6,6 @@ use serde_json::Value;
 use std::collections::HashMap;
 use tabled::Tabled;
 
-pub struct DownloadArgs<'a> {
-    pub name: Option<&'a str>,
-    pub version: Option<&'static str>,
-    pub uid: Option<&'static str>,
-    pub write_dir: &'static str,
-    pub ignore_release_candidates: &'static bool,
-    pub onnx: &'static bool,
-    pub no_onnx: &'static bool,
-}
-
 #[derive(Debug, Serialize)]
 pub struct ListTableRequest<'a> {
     pub registry_type: &'a str,

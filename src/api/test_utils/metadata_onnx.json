@@ -3,7 +3,7 @@
     "model_type": "sklearn_estimator",
     "onnx_uri": "blah",
     "onnx_version": "1.0.0",
-    "model_uri": "gs://ds-opsml-stg/upload_test/1/6172a5b0e6d64993915470f4fd05ca5e/artifacts/model/mlops/linear-reg1/v1.1.0/model/model.pkl",
+    "model_uri": "model.pkl",
     "model_version": "1.1.0",
     "model_team": "mlops",
     "sample_data": {
