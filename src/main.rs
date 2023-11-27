@@ -72,6 +72,14 @@ enum Commands {
     Info,
 }
 
+const LOGO_TEXT: &str = "
+ ██████  ██████  ███████ ███    ███ ██             ██████ ██      ██ 
+██    ██ ██   ██ ██      ████  ████ ██            ██      ██      ██ 
+██    ██ ██████  ███████ ██ ████ ██ ██      █████ ██      ██      ██ 
+██    ██ ██           ██ ██  ██  ██ ██            ██      ██      ██ 
+ ██████  ██      ███████ ██      ██ ███████        ██████ ███████ ██ 
+";
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
@@ -178,25 +186,9 @@ fn main() -> Result<()> {
 
         // subcommand for listing opsml-cli info
         Some(Commands::Info) => {
-            let logo_text = "
-                 ██████  ██████  ███████ ███    ███ ██             ██████ ██      ██ 
-                ██    ██ ██   ██ ██      ████  ████ ██            ██      ██      ██ 
-                ██    ██ ██████  ███████ ██ ████ ██ ██      █████ ██      ██      ██ 
-                ██    ██ ██           ██ ██  ██  ██ ██            ██      ██      ██ 
-                 ██████  ██      ███████ ██      ██ ███████        ██████ ███████ ██ 
-           "
-            .green();
-
             println!(
-                "
-
-                {}
-
-                opsml-cli version {}
-                2023 Shipt, Inc.
-
-                ",
-                logo_text,
+                "\n{}\nopsml-cli version {}\n2023 Shipt, Inc.\n",
+                LOGO_TEXT.green(),
                 env!("CARGO_PKG_VERSION").bold().purple(),
             );
 
