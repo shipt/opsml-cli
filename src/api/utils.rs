@@ -60,11 +60,15 @@ impl OpsmlPaths {
     }
 }
 
-pub async fn check_args(args: &types::DownloadArgs) -> Result<(), anyhow::Error> {
-    let common_args = [args.name, args.version];
+pub async fn check_args(
+    name: Option<&str>,
+    version: Option<&str>,
+    uid: Option<&str>,
+) -> Result<(), anyhow::Error> {
+    let common_args = [name, version];
     let has_common = common_args.iter().all(|i| i.is_none());
 
-    let has_uid = args.uid.is_none();
+    let has_uid = uid.is_none();
 
     if has_common != has_uid {
         Ok(())
