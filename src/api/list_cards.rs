@@ -66,7 +66,7 @@ impl CardLister<'_> {
             card_table.push(types::CardTable {
                 name: card.name.clone(),
                 team: card.team.clone(),
-                date: card.date.clone(),
+                date: card.date.clone().unwrap_or("".to_string()),
                 user_email: card.user_email.clone(),
                 version: card.version.clone(),
                 uid: card.uid.clone(),
@@ -239,7 +239,7 @@ mod tests {
         let card = types::Card {
             name: "test".to_string(),
             team: "test".to_string(),
-            date: "test".to_string(),
+            date: Some("test".to_string()),
             user_email: "fake_email".to_string(),
             version: "1.0.0".to_string(),
             uid: "uid".to_string(),

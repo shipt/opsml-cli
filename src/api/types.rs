@@ -38,7 +38,7 @@ pub struct ModelMetadataRequest<'a> {
 pub struct Card {
     pub name: String,
     pub team: String,
-    pub date: String,
+    pub date: Option<String>,
     pub user_email: String,
     pub version: String,
     pub uid: String,
