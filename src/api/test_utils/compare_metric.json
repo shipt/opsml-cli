@@ -1,0 +1,42 @@
+{
+    "challenger_name": "hootie-and-the-blowfish",
+    "challenger_version": "1.0.0",
+    "report": {
+        "test": [
+            {
+                "champion_name": "hootie-and-the-blowfish",
+                "champion_version": "1.0.1",
+                "champion_metric": {
+                    "name": "mape",
+                    "value": 10.0,
+                    "step": null,
+                    "timestamp": null
+                },
+                "challenger_metric": {
+                    "name": "mae",
+                    "value": 5,
+                    "step": null,
+                    "timestamp": null
+                },
+                "challenger_win": true
+            },
+            {
+                "champion_name": "hootie-and-the-blowfish",
+                "champion_version": "1.0.2",
+                "champion_metric": {
+                    "name": "mape",
+                    "value": 2,
+                    "step": null,
+                    "timestamp": null
+                },
+                "challenger_metric": {
+                    "name": "mae",
+                    "value": 5,
+                    "step": null,
+                    "timestamp": null
+                },
+                "challenger_win": false
+            }
+        ]
+    }
+}

@@ -1,0 +1,176 @@
+{
+    "model_name": "linear-reg1",
+    "model_type": "sklearn_estimator",
+    "onnx_uri": "blah",
+    "onnx_version": "1.0.0",
+    "model_uri": "model.pkl",
+    "model_version": "1.1.0",
+    "model_team": "mlops",
+    "sample_data": {
+        "col_1": -6.424493521757858,
+        "col_3": -4.01930897662945,
+        "col_2": -5.772332586533141,
+        "col_4": -4.923146817542065,
+        "col_8": -3.0057124313301613,
+        "col_11": 3.0,
+        "col_6": 0.6200741874932572,
+        "col_0": -3.1651973973843583,
+        "col_7": -5.647488336223753,
+        "col_9": -2.937101251440545,
+        "col_5": -3.730006188470103
+    },
+    "data_schema": {
+        "model_data_schema": {
+            "data_type": "PANDAS_DATAFRAME",
+            "input_features": {
+                "col_8": {
+                    "feature_type": "float64",
+                    "shape": [
+                        1
+                    ]
+                },
+                "col_2": {
+                    "feature_type": "float64",
+                    "shape": [
+                        1
+                    ]
+                },
+                "col_11": {
+                    "feature_type": "int64",
+                    "shape": [
+                        1
+                    ]
+                },
+                "col_3": {
+                    "feature_type": "float64",
+                    "shape": [
+                        1
+                    ]
+                },
+                "col_1": {
+                    "feature_type": "float64",
+                    "shape": [
+                        1
+                    ]
+                },
+                "col_6": {
+                    "feature_type": "float64",
+                    "shape": [
+                        1
+                    ]
+                },
+                "col_9": {
+                    "feature_type": "float64",
+                    "shape": [
+                        1
+                    ]
+                },
+                "col_4": {
+                    "feature_type": "float64",
+                    "shape": [
+                        1
+                    ]
+                },
+                "col_0": {
+                    "feature_type": "float64",
+                    "shape": [
+                        1
+                    ]
+                },
+                "col_5": {
+                    "feature_type": "float64",
+                    "shape": [
+                        1
+                    ]
+                },
+                "col_7": {
+                    "feature_type": "float64",
+                    "shape": [
+                        1
+                    ]
+                }
+            },
+            "output_features": {
+                "outputs": {
+                    "feature_type": "float64",
+                    "shape": [
+                        1,
+                        1
+                    ]
+                }
+            }
+        },
+        "input_data_schema": {
+            "col_0": {
+                "feature_type": "FLOAT",
+                "shape": [
+                    null,
+                    1
+                ]
+            },
+            "col_1": {
+                "feature_type": "FLOAT",
+                "shape": [
+                    null,
+                    1
+                ]
+            },
+            "col_2": {
+                "feature_type": "FLOAT",
+                "shape": [
+                    null,
+                    1
+                ]
+            },
+            "col_3": {
+                "feature_type": "FLOAT",
+                "shape": [
+                    null,
+                    1
+                ]
+            },
+            "col_4": {
+                "feature_type": "FLOAT",
+                "shape": [
+                    null,
+                    1
+                ]
+            },
+            "col_5": {
+                "feature_type": "FLOAT",
+                "shape": [
+                    null,
+                    1
+                ]
+            },
+            "col_6": {
+                "feature_type": "FLOAT",
+                "shape": [
+                    null,
+                    1
+                ]
+            },
+            "col_7": {
+                "feature_type": "FLOAT",
+                "shape": [
+                    null,
+                    1
+                ]
+            },
+            "col_8": {
+                "feature_type": "FLOAT",
+                "shape": [
+                    null,
+                    1
+                ]
+            },
+            "col_9": {
+                "feature_type": "FLOAT",
+                "shape": [
+                    null,
+                    1
+                ]
+            }
+        }
+    }
+}
