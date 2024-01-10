@@ -224,6 +224,8 @@ impl ModelDownloader<'_> {
         let model_metadata = self.get_metadata().await?;
         let (filename, model_uri) = self.get_uri(download_onnx, &model_metadata);
 
+        // need to list files first and then download them all to the same dir
+
         println!("Downloading model: {}, {}", filename.green(), model_uri);
 
         let local_save_path = format!("{}/{}", self.write_dir, filename);
