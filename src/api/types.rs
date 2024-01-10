@@ -92,16 +92,20 @@ pub struct CardTable {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct ModelDataSchema {
-    data_type: String,
-    input_features: HashMap<String, Value>,
-    output_features: HashMap<String, Value>,
+pub struct Feature {
+    feature_type: String,
+    shape: Value,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DataSchema {
-    model_data_schema: ModelDataSchema,
-    input_data_schema: Option<HashMap<String, Value>>,
+    data_type: Option<String>,
+    input_features: Option<HashMap<String, Feature>>,
+    output_features: Option<HashMap<String, Feature>>,
+    onnx_input_features: Option<HashMap<String, Feature>>,
+    onnx_output_features: Option<HashMap<String, Feature>>,
+    onnx_data_type: Option<String>,
+    onnx_version: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -113,8 +117,15 @@ pub struct ModelMetadata {
     pub model_uri: String,
     pub model_version: String,
     pub model_team: String,
-    pub sample_data: HashMap<String, Value>,
+    pub sample_data_uri: String,
     pub data_schema: DataSchema,
+    pub preprocessor_uri: Option<String>,
+    pub preprocessor_name: Option<String>,
+    pub tokenizer_uri: Option<String>,
+    pub tokenizer_name: Option<String>,
+    pub feature_extractor_uri: Option<String>,
+    pub feature_extractor_name: Option<String>,
+    pub quantized_model_uri: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
