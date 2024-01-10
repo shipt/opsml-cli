@@ -22,6 +22,7 @@ pub struct ModelDownloader<'a> {
     pub ignore_release_candidates: &'a bool,
     pub onnx: &'a bool,
     pub no_onnx: &'a bool,
+    pub quantize: &'a bool,
 }
 
 impl ModelDownloader<'_> {
@@ -160,21 +161,47 @@ impl ModelDownloader<'_> {
     /// # Returns
     /// * `(String, String)` - Tuple of filename and uri
     ///
-    fn get_uri(
-        &self,
-        download_onnx: bool,
-        model_metadata: &types::ModelMetadata,
-    ) -> (String, String) {
+    fn get_model_uri(&self, download_onnx: bool, model_metadata: &types::ModelMetadata) -> &Path {
         let uri = if download_onnx {
-            model_metadata.onnx_uri.clone().expect(NO_ONNX_URI)
+            if self.quantize == &true {
+                model_metadata
+                    .quantized_model_uri
+                    .clone()
+                    .expect(NO_ONNX_URI)
+            } else {
+                model_metadata.onnx_uri.clone().expect(NO_ONNX_URI)
+            }
         } else {
             model_metadata.model_uri.clone()
         };
 
         let filepath = std::path::Path::new(&uri);
-        let filename = filepath.file_name().unwrap().to_str().unwrap().to_string();
 
-        (filename, uri)
+        filepath
+    }
+
+    /// Sets processor uri
+    ///
+    /// # Arguments
+    ///
+    /// * `onnx` - Flag to download onnx model
+    /// * `model_metadata` - Model metadata
+    ///
+    /// # Returns
+    /// * `(String, String)` - Tuple of filename and uri
+    ///
+    fn get_preprocessor_uri(&self, model_metadata: &types::ModelMetadata) -> Option<&Path> {
+        let uri  = if model_metadata.preprocessor_uri.is_some() {
+            Some(std::path::Path::new(&model_metadata.preprocessor_uri.unwrap()))
+        } else if model_metadata.tokenizer_uri.is_some() {
+            Some(std::path::Path::new(&model_metadata.tokenizer_uri.unwrap()))s
+        } else if model_metadata.feature_extractor_uri.is_some() {
+            Some(std::path::Path::new(&model_metadata.feature_extractor_uri.unwrap()))
+        } else {
+            None
+        };
+
+        uri
     }
 
     /// Downloads metadata
@@ -222,9 +249,10 @@ impl ModelDownloader<'_> {
     async fn download_model(&self) -> Result<(), anyhow::Error> {
         let download_onnx = !(self.no_onnx); //if no_onnx is true, download_onnx is false
         let model_metadata = self.get_metadata().await?;
+
         let (filename, model_uri) = self.get_uri(download_onnx, &model_metadata);
 
-        // need to list files first and then download them all to the same dir
+        /// need to list files first and then download them all to the same dir
 
         println!("Downloading model: {}, {}", filename.green(), model_uri);
 
@@ -270,6 +298,7 @@ pub async fn download_model_metadata(
         ignore_release_candidates,
         onnx: &false,
         no_onnx: &false,
+        quantize: &false,
     };
     model_downloader.get_metadata().await
 }
@@ -293,6 +322,7 @@ pub async fn download_model(
     write_dir: &str,
     no_onnx: &bool,
     onnx: &bool,
+    quantize: &bool,
     ignore_release_candidates: &bool,
 ) -> Result<(), anyhow::Error> {
     let model_downloader = ModelDownloader {
@@ -303,6 +333,7 @@ pub async fn download_model(
         ignore_release_candidates,
         onnx,
         no_onnx,
+        quantize,
     };
     model_downloader.download_model().await
 }
