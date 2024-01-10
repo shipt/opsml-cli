@@ -428,9 +428,9 @@ checksum = "4271d37baee1b8c7e4b708028c57d816cf9d2434acb33a549475f78c181f6253"
 
 [[package]]
 name = "h2"
-version = "0.3.22"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4d6250322ef6e60f93f9a2162799302cd6f68f79f6e5d85c8c16f14d1d958178"
+checksum = "b553656127a00601c8ae5590fcfdc118e4083a7924b6cf4ffc1ea4b99dc429d7"
 dependencies = [
  "bytes",
  "fnv",
@@ -786,7 +786,6 @@ dependencies = [
  "mockito",
  "openssl",
  "owo-colors",
- "pathdiff",
  "reqwest",
  "serde",
  "serde_json",
@@ -836,12 +835,6 @@ dependencies = [
  "smallvec",
  "windows-targets 0.48.5",
 ]
-
-[[package]]
-name = "pathdiff"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8835116a5c179084a830efb3adc117ab007512b535bc1a21c991d3b32a6b44dd"
 
 [[package]]
 name = "percent-encoding"

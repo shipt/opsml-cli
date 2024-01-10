@@ -61,6 +61,7 @@ fn main() -> Result<()> {
                 &args.write_dir,
                 &args.no_onnx,
                 &args.onnx,
+                &args.quantize,
                 &args.ignore_release_candidates,
             )
             .with_context(|| {

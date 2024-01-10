@@ -95,6 +95,10 @@ pub struct DownloadModelArgs {
     #[arg(long = "onnx", default_value = "true")]
     pub onnx: bool,
 
+    /// Boolean indicating whether to use the quantized version of the model (huggingface only)
+    #[arg(long = "onnx", default_value = "false")]
+    pub quantize: bool,
+
     /// ignore release candidate
     #[arg(long = "ignore_release_candidate", default_value = "false")]
     pub ignore_release_candidates: bool,

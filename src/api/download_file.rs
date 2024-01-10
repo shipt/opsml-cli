@@ -6,9 +6,9 @@ use crate::api::utils;
 use anyhow::{Context, Result};
 use futures_util::StreamExt;
 use owo_colors::OwoColorize;
-use pathdiff::diff_paths;
 use reqwest::{self, Response};
 use serde_json;
+use std::path::PathBuf;
 use std::{format, fs, path::Path};
 use tokio;
 
@@ -163,7 +163,7 @@ impl ModelDownloader<'_> {
     /// # Returns
     /// * `&Path` - Remote path to file
     ///
-    fn get_model_uri(&self, download_onnx: bool, model_metadata: &types::ModelMetadata) -> &Path {
+    fn get_model_uri(&self, download_onnx: bool, model_metadata: &types::ModelMetadata) -> PathBuf {
         let uri = if download_onnx {
             if self.quantize == &true {
                 model_metadata
@@ -177,9 +177,9 @@ impl ModelDownloader<'_> {
             model_metadata.model_uri.clone()
         };
 
-        let filepath = std::path::Path::new(&uri);
+        let filepath = std::path::Path::new(&uri).clone();
 
-        filepath
+        filepath.to_owned()
     }
 
     /// Gets processor uri
@@ -191,22 +191,23 @@ impl ModelDownloader<'_> {
     /// # Returns
     /// * `Option<&Path>` - File path to processor or None
     ///
-    fn get_preprocessor_uri(&self, model_metadata: &types::ModelMetadata) -> Option<&Path> {
+    fn get_preprocessor_uri(&self, model_metadata: &types::ModelMetadata) -> Option<PathBuf> {
         let uri = if model_metadata.preprocessor_uri.is_some() {
-            Some(std::path::Path::new(
-                &model_metadata.preprocessor_uri.unwrap(),
-            ))
+            Some(
+                std::path::Path::new(&model_metadata.preprocessor_uri.as_ref().unwrap()).to_owned(),
+            )
         } else if model_metadata.tokenizer_uri.is_some() {
-            Some(std::path::Path::new(&model_metadata.tokenizer_uri.unwrap()))
+            Some(std::path::Path::new(&model_metadata.tokenizer_uri.as_ref().unwrap()).to_owned())
         } else if model_metadata.feature_extractor_uri.is_some() {
-            Some(std::path::Path::new(
-                &model_metadata.feature_extractor_uri.unwrap(),
-            ))
+            Some(
+                std::path::Path::new(&model_metadata.feature_extractor_uri.as_ref().unwrap())
+                    .to_owned(),
+            )
         } else {
             None
         };
 
-        uri
+        uri.to_owned()
     }
 
     /// Downloads metadata
@@ -313,13 +314,13 @@ impl ModelDownloader<'_> {
 
         if preprocessor_rpath.is_some() {
             let preprocessor_rpath = preprocessor_rpath.unwrap();
-            self.download_files(preprocessor_rpath).await?;
+            self.download_files(&preprocessor_rpath).await?;
         }
 
         let model_rpath = self.get_model_uri(download_onnx, &model_metadata);
 
         // Get model
-        self.download_files(model_rpath).await?;
+        self.download_files(&model_rpath).await?;
 
         Ok(())
     }
@@ -435,6 +436,7 @@ mod tests {
             ignore_release_candidates: &false,
             onnx: &false,
             no_onnx: &true,
+            quantize: &false,
         };
 
         let model_metadata = downloader.get_metadata().await.unwrap();
