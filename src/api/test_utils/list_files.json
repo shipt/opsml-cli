@@ -1,0 +1,9 @@
+{
+    "files": [
+        "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.2.0/card.joblib",
+        "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.2.0/model-metadata.json",
+        "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.2.0/preprocessor.joblib",
+        "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.2.0/sample-model-data.joblib",
+        "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.2.0/trained-model.joblib"
+    ]
+}
