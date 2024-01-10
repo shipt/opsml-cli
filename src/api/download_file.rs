@@ -177,7 +177,7 @@ impl ModelDownloader<'_> {
             model_metadata.model_uri.clone()
         };
 
-        let filepath = std::path::Path::new(&uri).clone();
+        let filepath = std::path::Path::new(&uri);
 
         filepath.to_owned()
     }
@@ -238,15 +238,17 @@ impl ModelDownloader<'_> {
     /// * `Result<(), String>` - Result of file download
     ///
     async fn download_file(&self, lpath: &Path, rpath: &str) -> Result<(), anyhow::Error> {
+        let filename = lpath.file_name().unwrap().to_str().unwrap().to_string();
         let model_url = format!("{}?path={}", OpsmlPaths::Download.as_str(), rpath);
         let response = utils::make_get_request(&model_url).await?;
 
         if response.status().is_success() {
+            println!("Downloading model: {}, {}", filename.green(), model_url);
             self.download_stream_to_file(response, lpath).await?;
         } else {
             let error_message = format!(
                 "Failed to download model: {}",
-                response.text().await.unwrap()
+                response.text().await.unwrap().red()
             );
             return Err(anyhow::anyhow!(error_message));
         }
