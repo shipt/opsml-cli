@@ -161,7 +161,7 @@ impl ModelDownloader<'_> {
     /// * `model_metadata` - Model metadata
     ///
     /// # Returns
-    /// * `(String, String)` - Tuple of filename and uri
+    /// * `&Path` - Remote path to file
     ///
     fn get_model_uri(&self, download_onnx: bool, model_metadata: &types::ModelMetadata) -> &Path {
         let uri = if download_onnx {
@@ -182,15 +182,14 @@ impl ModelDownloader<'_> {
         filepath
     }
 
-    /// Sets processor uri
+    /// Gets processor uri
     ///
     /// # Arguments
     ///
-    /// * `onnx` - Flag to download onnx model
     /// * `model_metadata` - Model metadata
     ///
     /// # Returns
-    /// * `(String, String)` - Tuple of filename and uri
+    /// * `Option<&Path>` - File path to processor or None
     ///
     fn get_preprocessor_uri(&self, model_metadata: &types::ModelMetadata) -> Option<&Path> {
         let uri = if model_metadata.preprocessor_uri.is_some() {
@@ -265,12 +264,23 @@ impl ModelDownloader<'_> {
         Ok(files)
     }
 
+    /// Downloads files associated with a model
+    ///
+    /// # Arguments
+    ///
+    /// * `rpath` - Remote path to file
+    ///
+    /// # Returns
+    /// * `Result<(), String>` - Result of file download
     async fn download_files(&self, rpath: &Path) -> Result<(), anyhow::Error> {
         let rpath_files = self.list_files(rpath).await?;
 
+        // iterate over each file and download
         for file in rpath_files.files.iter() {
             let base_path = rpath;
-            let lpath = if Path::new(rpath).extension().is_none() {
+
+            // check if rpath is a directory
+            let lpath = if rpath.extension().is_none() {
                 // if rpath is a directory, append filename to rpath
                 let path_to_file = Path::new(file)
                     .strip_prefix(base_path)
@@ -292,6 +302,8 @@ impl ModelDownloader<'_> {
     }
 
     /// Downloads a model file
+    /// Will also download any associated preprocessor files
+    /// Preprocessors can be tokenizer, feature extractor, or preprocessor
     async fn download_model(&self) -> Result<(), anyhow::Error> {
         let download_onnx = !(self.no_onnx); //if no_onnx is true, download_onnx is false
         let model_metadata = self.get_metadata().await?;
@@ -305,6 +317,9 @@ impl ModelDownloader<'_> {
         }
 
         let model_rpath = self.get_model_uri(download_onnx, &model_metadata);
+
+        // Get model
+        self.download_files(model_rpath).await?;
 
         Ok(())
     }
