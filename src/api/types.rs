@@ -46,6 +46,11 @@ pub struct Card {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct ListFileResponse {
+    pub files: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ListMetricResponse {
     pub metrics: HashMap<String, Vec<Metric>>,
 }

@@ -36,6 +36,7 @@ pub enum OpsmlPaths {
     Download,
     Metric,
     CompareMetric,
+    ListFile,
 }
 
 impl OpsmlPaths {
@@ -54,6 +55,7 @@ impl OpsmlPaths {
             OpsmlPaths::CompareMetric => {
                 format!("{}/opsml/models/compare_metrics", *OPSML_TRACKING_URI)
             }
+            OpsmlPaths::ListFile => format!("{}/opsml/files/list", *OPSML_TRACKING_URI),
         }
     }
 }

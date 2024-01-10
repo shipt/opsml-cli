@@ -6,10 +6,13 @@ use crate::api::utils;
 use anyhow::{Context, Result};
 use futures_util::StreamExt;
 use owo_colors::OwoColorize;
+use pathdiff::diff_paths;
 use reqwest::{self, Response};
 use serde_json;
 use std::{format, fs, path::Path};
 use tokio;
+
+use super::utils::OpsmlPaths;
 
 const MODEL_METADATA_FILE: &str = "metadata.json";
 const NO_ONNX_URI: &str = "No onnx model uri found but onnx flag set to true";
@@ -32,8 +35,7 @@ impl ModelDownloader<'_> {
     ///
     /// * `path` - path to create
     ///
-    fn create_dir_path(&self, path: &str) -> Result<(), anyhow::Error> {
-        let path = std::path::Path::new(path);
+    fn create_dir_path(&self, path: &Path) -> Result<(), anyhow::Error> {
         let prefix = path
             .parent()
             .with_context(|| "Failed to get parent directory")?;
@@ -105,7 +107,7 @@ impl ModelDownloader<'_> {
     async fn save_metadata_to_json(
         &self,
         metadata: &types::ModelMetadata,
-        path: &str,
+        path: &Path,
     ) -> Result<(), anyhow::Error> {
         let json_string =
             serde_json::to_string(metadata).with_context(|| "Failed to serialize metadata")?;
@@ -124,7 +126,7 @@ impl ModelDownloader<'_> {
     /// * `Result<types::ModelMetadata, String>` - Result of model metadata download
     ///
     async fn get_model_metadata(&self) -> Result<types::ModelMetadata, anyhow::Error> {
-        let save_path: String = format!("{}/{}", self.write_dir, MODEL_METADATA_FILE);
+        let save_path = Path::new(&self.write_dir).join(MODEL_METADATA_FILE);
 
         let model_metadata_request = types::ModelMetadataRequest {
             name: self.name,
@@ -191,12 +193,16 @@ impl ModelDownloader<'_> {
     /// * `(String, String)` - Tuple of filename and uri
     ///
     fn get_preprocessor_uri(&self, model_metadata: &types::ModelMetadata) -> Option<&Path> {
-        let uri  = if model_metadata.preprocessor_uri.is_some() {
-            Some(std::path::Path::new(&model_metadata.preprocessor_uri.unwrap()))
+        let uri = if model_metadata.preprocessor_uri.is_some() {
+            Some(std::path::Path::new(
+                &model_metadata.preprocessor_uri.unwrap(),
+            ))
         } else if model_metadata.tokenizer_uri.is_some() {
-            Some(std::path::Path::new(&model_metadata.tokenizer_uri.unwrap()))s
+            Some(std::path::Path::new(&model_metadata.tokenizer_uri.unwrap()))
         } else if model_metadata.feature_extractor_uri.is_some() {
-            Some(std::path::Path::new(&model_metadata.feature_extractor_uri.unwrap()))
+            Some(std::path::Path::new(
+                &model_metadata.feature_extractor_uri.unwrap(),
+            ))
         } else {
             None
         };
@@ -231,16 +237,56 @@ impl ModelDownloader<'_> {
     /// # Returns
     /// * `Result<(), String>` - Result of file download
     ///
-    async fn download_file(
-        &self,
-        url: &str,
-        uri: &str,
-        local_save_path: &str,
-    ) -> Result<(), anyhow::Error> {
-        let model_url = format!("{}?read_path={}", url, uri);
+    async fn download_file(&self, lpath: &Path, rpath: &str) -> Result<(), anyhow::Error> {
+        let model_url = format!("{}?path={}", OpsmlPaths::Download.as_str(), rpath);
         let response = utils::make_get_request(&model_url).await?;
-        let filepath = Path::new(local_save_path);
-        self.download_stream_to_file(response, filepath).await?;
+
+        if response.status().is_success() {
+            self.download_stream_to_file(response, lpath).await?;
+        } else {
+            let error_message = format!(
+                "Failed to download model: {}",
+                response.text().await.unwrap()
+            );
+            return Err(anyhow::anyhow!(error_message));
+        }
+
+        Ok(())
+    }
+
+    async fn list_files(&self, rpath: &Path) -> Result<types::ListFileResponse, anyhow::Error> {
+        let file_url = format!(
+            "{}?path={}",
+            &utils::OpsmlPaths::ListFile.as_str(),
+            rpath.to_str().unwrap()
+        );
+        let response = utils::make_get_request(&file_url).await?;
+        let files = response.json::<types::ListFileResponse>().await?;
+        Ok(files)
+    }
+
+    async fn download_files(&self, rpath: &Path) -> Result<(), anyhow::Error> {
+        let rpath_files = self.list_files(rpath).await?;
+
+        for file in rpath_files.files.iter() {
+            let base_path = rpath;
+            let lpath = if Path::new(rpath).extension().is_none() {
+                // if rpath is a directory, append filename to rpath
+                let path_to_file = Path::new(file)
+                    .strip_prefix(base_path)
+                    .with_context(|| "Failed to create file path")?;
+                Path::new(self.write_dir).join(path_to_file)
+            } else {
+                Path::new(self.write_dir).join(
+                    Path::new(file)
+                        .file_name()
+                        .with_context(|| "Failed to create file path")?,
+                )
+            };
+
+            self.create_dir_path(&lpath)?;
+            self.download_file(&lpath, file).await?;
+        }
 
         Ok(())
     }
@@ -250,24 +296,15 @@ impl ModelDownloader<'_> {
         let download_onnx = !(self.no_onnx); //if no_onnx is true, download_onnx is false
         let model_metadata = self.get_metadata().await?;
 
-        let (filename, model_uri) = self.get_uri(download_onnx, &model_metadata);
+        // Get preprocessor
+        let preprocessor_rpath = self.get_preprocessor_uri(&model_metadata);
 
-        /// need to list files first and then download them all to the same dir
+        if preprocessor_rpath.is_some() {
+            let preprocessor_rpath = preprocessor_rpath.unwrap();
+            self.download_files(preprocessor_rpath).await?;
+        }
 
-        println!("Downloading model: {}, {}", filename.green(), model_uri);
-
-        let local_save_path = format!("{}/{}", self.write_dir, filename);
-
-        // Create all parent dirs if not exist
-        self.create_dir_path(&local_save_path)?;
-
-        // Download model
-        self.download_file(
-            &utils::OpsmlPaths::Download.as_str(),
-            &model_uri,
-            &local_save_path,
-        )
-        .await?;
+        let model_rpath = self.get_model_uri(download_onnx, &model_metadata);
 
         Ok(())
     }
