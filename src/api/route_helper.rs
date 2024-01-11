@@ -120,7 +120,7 @@ impl RouteHelper {
         let response = RouteHelper::make_get_request(&model_url).await?;
 
         if response.status().is_success() {
-            println!("Downloading model: {}, {}", filename.green(), model_url);
+            println!("Downloading file: {}, {}", filename.green(), rpath);
             RouteHelper::download_stream_to_file(response, lpath).await?;
         } else {
             let error_message = format!(

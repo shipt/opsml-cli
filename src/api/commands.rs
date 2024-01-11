@@ -88,11 +88,7 @@ pub struct DownloadModelArgs {
     pub write_dir: String,
 
     /// Boolean indicating whether to download onnx or trained model
-    #[arg(long = "no-onnx", default_value = "false")]
-    pub no_onnx: bool,
-
-    /// Boolean indicating whether to download onnx or trained model
-    #[arg(long = "onnx", default_value = "true")]
+    #[arg(long = "onnx", default_value = "false")]
     pub onnx: bool,
 
     /// Boolean indicating whether to use the quantized version of the model (huggingface only)

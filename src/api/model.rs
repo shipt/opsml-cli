@@ -5,6 +5,7 @@ use crate::api::route_helper::RouteHelper;
 use crate::api::types;
 use crate::api::utils;
 use anyhow::{Context, Result};
+use owo_colors::OwoColorize;
 use serde_json;
 use std::path::PathBuf;
 use std::{fs, path::Path};
@@ -12,6 +13,7 @@ use tokio;
 
 const MODEL_METADATA_FILE: &str = "metadata.json";
 const NO_ONNX_URI: &str = "No onnx model uri found but onnx flag set to true";
+const NO_QUANTIZE_URI: &str = "No quantize model uri found but quantize flag set to true";
 
 pub struct ModelDownloader<'a> {
     pub name: Option<&'a str>,
@@ -20,7 +22,6 @@ pub struct ModelDownloader<'a> {
     pub write_dir: &'a str,
     pub ignore_release_candidates: &'a bool,
     pub onnx: &'a bool,
-    pub no_onnx: &'a bool,
     pub quantize: &'a bool,
     pub preprocessor: &'a bool,
 }
@@ -95,23 +96,31 @@ impl ModelDownloader<'_> {
     /// # Returns
     /// * `&Path` - Remote path to file
     ///
-    fn get_model_uri(&self, download_onnx: bool, model_metadata: &types::ModelMetadata) -> PathBuf {
-        let uri = if download_onnx {
+    fn get_model_uri(
+        &self,
+        model_metadata: &types::ModelMetadata,
+    ) -> Result<PathBuf, anyhow::Error> {
+        let uri = if self.onnx == &true {
             if self.quantize == &true {
                 model_metadata
                     .quantized_model_uri
                     .clone()
-                    .expect(NO_ONNX_URI)
+                    .with_context(|| NO_ONNX_URI.red())
             } else {
-                model_metadata.onnx_uri.clone().expect(NO_ONNX_URI)
+                model_metadata
+                    .onnx_uri
+                    .clone()
+                    .with_context(|| NO_QUANTIZE_URI.red())
             }
         } else {
-            model_metadata.model_uri.clone()
+            Ok(model_metadata.model_uri.clone())
         };
+
+        let uri = uri.unwrap();
 
         let filepath = std::path::Path::new(&uri);
 
-        filepath.to_owned()
+        Ok(filepath.to_owned())
     }
 
     /// Gets processor uri
@@ -175,7 +184,6 @@ impl ModelDownloader<'_> {
 
             // check if rpath is a directory
             let lpath = if rpath.extension().is_none() {
-                println!("rpath is a directory {:?} {:?}", rpath, base_path);
                 // if rpath is a directory, append filename to rpath
                 let path_to_file = Path::new(file)
                     .strip_prefix(base_path)
@@ -200,7 +208,6 @@ impl ModelDownloader<'_> {
     /// Will also download any associated preprocessor files
     /// Preprocessors can be tokenizer, feature extractor, or preprocessor
     async fn download_model(&self) -> Result<(), anyhow::Error> {
-        let download_onnx = !(self.no_onnx); //if no_onnx is true, download_onnx is false
         let model_metadata = self.get_metadata().await?;
 
         // Get preprocessor
@@ -213,7 +220,7 @@ impl ModelDownloader<'_> {
             }
         }
 
-        let model_rpath = self.get_model_uri(download_onnx, &model_metadata);
+        let model_rpath = self.get_model_uri(&model_metadata)?;
 
         // Get model
         self.download_files(&model_rpath).await?;
@@ -246,7 +253,6 @@ pub async fn download_model_metadata(
         write_dir,
         ignore_release_candidates,
         onnx: &false,
-        no_onnx: &false,
         quantize: &false,
         preprocessor: &false,
     };
@@ -271,7 +277,6 @@ pub async fn download_model(
     version: Option<&str>,
     uid: Option<&str>,
     write_dir: &str,
-    no_onnx: &bool,
     onnx: &bool,
     quantize: &bool,
     preprocessor: &bool,
@@ -284,7 +289,6 @@ pub async fn download_model(
         write_dir,
         ignore_release_candidates,
         onnx,
-        no_onnx,
         quantize,
         preprocessor,
     };
@@ -366,7 +370,6 @@ mod tests {
             write_dir: &new_dir,
             ignore_release_candidates: &false,
             onnx: &true,
-            no_onnx: &false,
             quantize: &false,
             preprocessor: &false,
         };
@@ -491,7 +494,6 @@ mod tests {
             write_dir: &new_dir,
             ignore_release_candidates: &false,
             onnx: &true,
-            no_onnx: &false,
             quantize: &false,
             preprocessor: &true,
         };

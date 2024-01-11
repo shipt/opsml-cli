@@ -59,7 +59,6 @@ fn main() -> Result<()> {
                 args.version.as_deref(),
                 args.uid.as_deref(),
                 &args.write_dir,
-                &args.no_onnx,
                 &args.onnx,
                 &args.quantize,
                 &args.preprocessor,
