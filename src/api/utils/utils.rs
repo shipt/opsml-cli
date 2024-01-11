@@ -1,13 +1,11 @@
 /// Copyright (c) Shipt, Inc.
 /// This source code is licensed under the MIT license found in the
 /// LICENSE file in the root directory of this source tree.
-/// use crate::api::types;
 use anyhow::Context;
 use lazy_static::lazy_static;
 use owo_colors::OwoColorize;
 use reqwest::Url;
-use reqwest::{self, Response};
-use serde::Serialize;
+use reqwest::{self};
 use std::env;
 
 lazy_static! {
@@ -98,42 +96,6 @@ pub async fn create_client(url: &str) -> Result<(reqwest::Client, Url), anyhow::
     let client = reqwest::Client::new();
 
     Ok((client, parsed_url))
-}
-
-/// async post request for metadata
-///
-/// # Arguments
-///
-/// * `url` - A string slice
-/// * `payload` - A string slice
-///
-pub async fn make_post_request<T: Serialize>(
-    url: &str,
-    payload: &T,
-) -> Result<Response, anyhow::Error> {
-    let (client, parsed_url) = create_client(url).await.unwrap();
-    let msg = client.post(parsed_url).json(payload).send();
-
-    match msg.await {
-        Ok(response) => Ok(response),
-        Err(e) => Err(anyhow::Error::msg(format!(
-            "Failed to make post request: {}",
-            e
-        ))),
-    }
-}
-
-pub async fn make_get_request(url: &str) -> Result<Response, anyhow::Error> {
-    let (client, parsed_url) = create_client(url).await.unwrap();
-    let msg = client.get(parsed_url).send();
-
-    match msg.await {
-        Ok(response) => Ok(response),
-        Err(e) => Err(anyhow::Error::msg(format!(
-            "Failed to make get request: {}",
-            e
-        ))),
-    }
 }
 
 #[cfg(test)]

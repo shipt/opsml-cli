@@ -1,8 +1,8 @@
 /// Copyright (c) Shipt, Inc.
 /// This source code is licensed under the MIT license found in the
 /// LICENSE file in the root directory of this source tree.
-use api::download_file::download_model;
-use api::download_file::download_model_metadata;
+use api::download_artifacts::download_model;
+use api::download_artifacts::download_model_metadata;
 use api::list_cards::list_cards;
 use api::metrics::{compare_model_metrics, get_model_metrics};
 mod api;

@@ -2,7 +2,7 @@
 /// This source code is licensed under the MIT license found in the
 /// LICENSE file in the root directory of this source tree.
 use crate::api::types;
-use crate::api::utils;
+use crate::api::utils::utils;
 use anyhow::{Context, Result};
 use futures_util::StreamExt;
 use owo_colors::OwoColorize;
@@ -11,8 +11,6 @@ use serde_json;
 use std::path::PathBuf;
 use std::{format, fs, path::Path};
 use tokio;
-
-use super::utils::OpsmlPaths;
 
 const MODEL_METADATA_FILE: &str = "metadata.json";
 const NO_ONNX_URI: &str = "No onnx model uri found but onnx flag set to true";
@@ -64,34 +62,6 @@ impl ModelDownloader<'_> {
             stream_buffer.push_str(string_chunk);
         }
         Ok(stream_buffer)
-    }
-
-    /// Downloads a stream to a file
-    ///
-    /// # Arguments
-    ///
-    /// * `response` - Response object
-    /// * `filename` - Path to save file to
-    ///
-    /// # Returns
-    /// * `Result<(), String>` - Result of file download
-    ///
-    async fn download_stream_to_file(
-        &self,
-        response: Response,
-        filename: &Path,
-    ) -> Result<(), anyhow::Error> {
-        let mut response_stream = response.bytes_stream();
-        let mut file = tokio::fs::File::create(filename).await.unwrap();
-
-        while let Some(item) = response_stream.next().await {
-            let chunk =
-                item.with_context(|| format!("failed to read response for {:?}", filename))?;
-            tokio::io::copy(&mut chunk.as_ref(), &mut file)
-                .await
-                .with_context(|| format!("failed to write response for {:?}", filename))?;
-        }
-        Ok(())
     }
 
     /// Saves metadata to json
@@ -226,7 +196,7 @@ impl ModelDownloader<'_> {
         Ok(model_metadata)
     }
 
-    /// Downloads a model file
+    /// Downloads an artifact file
     ///
     /// # Arguments
     ///
@@ -239,12 +209,12 @@ impl ModelDownloader<'_> {
     ///
     async fn download_file(&self, lpath: &Path, rpath: &str) -> Result<(), anyhow::Error> {
         let filename = lpath.file_name().unwrap().to_str().unwrap().to_string();
-        let model_url = format!("{}?path={}", OpsmlPaths::Download.as_str(), rpath);
+        let model_url = format!("{}?path={}", utils::OpsmlPaths::Download.as_str(), rpath);
         let response = utils::make_get_request(&model_url).await?;
 
         if response.status().is_success() {
             println!("Downloading model: {}, {}", filename.green(), model_url);
-            self.download_stream_to_file(response, lpath).await?;
+            utils::download_stream_to_file(response, lpath).await?;
         } else {
             let error_message = format!(
                 "Failed to download model: {}",
@@ -256,17 +226,6 @@ impl ModelDownloader<'_> {
         Ok(())
     }
 
-    async fn list_files(&self, rpath: &Path) -> Result<types::ListFileResponse, anyhow::Error> {
-        let file_url = format!(
-            "{}?path={}",
-            &utils::OpsmlPaths::ListFile.as_str(),
-            rpath.to_str().unwrap()
-        );
-        let response = utils::make_get_request(&file_url).await?;
-        let files = response.json::<types::ListFileResponse>().await?;
-        Ok(files)
-    }
-
     /// Downloads files associated with a model
     ///
     /// # Arguments
@@ -276,7 +235,7 @@ impl ModelDownloader<'_> {
     /// # Returns
     /// * `Result<(), String>` - Result of file download
     async fn download_files(&self, rpath: &Path) -> Result<(), anyhow::Error> {
-        let rpath_files = self.list_files(rpath).await?;
+        let rpath_files = utils::list_files(rpath).await?;
 
         println!("Downloading files: {}", rpath_files.files.join(", "));
         // iterate over each file and download
@@ -321,8 +280,6 @@ impl ModelDownloader<'_> {
         }
 
         let model_rpath = self.get_model_uri(download_onnx, &model_metadata);
-
-        println!("Downloading model metadata: {:?}", &model_rpath);
 
         // Get model
         self.download_files(&model_rpath).await?;
@@ -424,9 +381,9 @@ mod tests {
                 .unwrap();
 
         // mock list files
-        let preprocessor_path = format!("/opsml/files/list?path={}", rpath);
+        let artifact_path = format!("/opsml/files/list?path={}", rpath);
         let mock_list_files = download_server
-            .mock("GET", preprocessor_path.as_str())
+            .mock("GET", artifact_path.as_str())
             .with_status(201)
             .with_body(&files)
             .create();
@@ -442,7 +399,7 @@ mod tests {
             quantize: &false,
         };
 
-        let file_response = downloader.list_files(Path::new(rpath)).await.unwrap();
+        let file_response = utils::list_files(Path::new(rpath)).await.unwrap();
         mock_list_files.assert();
 
         // assert structs are the same
@@ -457,8 +414,9 @@ mod tests {
         env::set_var("OPSML_TRACKING_URI", url);
 
         //paths
+        let rpath = "./src/api/test_utils/trained_model";
         let model_path = "./src/api/test_utils/trained_model/sklearn_pipeline-v1-0-0.onnx";
-        let preprocessor_path = "./src/api/test_utils/trained_model/tokenizer.json";
+        let tokenizer_path = "./src/api/test_utils/trained_model/tokenizer.json";
 
         // get metadata
         let metadata_path = "./src/api/test_utils/metadata_onnx.json";
@@ -470,9 +428,6 @@ mod tests {
         // get files
         let files_path = "./src/api/test_utils/list_files.json";
         let files = fs::read_to_string(files_path).expect("Unable to read file");
-        let _: types::ListFileResponse =
-            serde_json::from_str(&fs::read_to_string(files_path).expect("Unable to read file"))
-                .unwrap();
 
         // directory to write to
         let new_dir = format!("./src/api/test_utils/{}", Uuid::new_v4());
@@ -485,23 +440,24 @@ mod tests {
             .create();
 
         // mock list files
-        let _ = download_server
-            .mock("GET", "/opsml/files/list")
+        let artifact_path = format!("/opsml/files/list?path={}", rpath);
+        let mock_list_path = download_server
+            .mock("GET", artifact_path.as_str())
             .with_status(201)
             .with_body(&files)
             .create();
 
         // mock model
         let get_path = format!("/opsml/files/download?path={}", model_path);
-        let mock_preprocessor_path = download_server
+        let mock_model_path = download_server
             .mock("GET", get_path.as_str())
             .with_status(201)
             .with_body(&metadata)
             .create();
 
         // mock preprocessor
-        let get_path = format!("/opsml/files/download?path={}", preprocessor_path);
-        let mock_model_path = download_server
+        let get_path = format!("/opsml/files/download?path={}", tokenizer_path);
+        let mock_tokenizer_path = download_server
             .mock("GET", get_path.as_str())
             .with_status(201)
             .with_body(&metadata)
@@ -525,10 +481,11 @@ mod tests {
         assert_json_eq!(mock_metadata, model_metadata);
         downloader.download_model().await.unwrap();
 
+        mock_list_path.assert();
         mock_model_path.assert();
-        mock_preprocessor_path.assert();
+        mock_tokenizer_path.assert();
 
         // clean up
-        //fs::remove_dir_all(&new_dir).unwrap();
+        fs::remove_dir_all(&new_dir).unwrap();
     }
 }

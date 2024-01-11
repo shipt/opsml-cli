@@ -3,8 +3,11 @@
 /// LICENSE file in the root directory of this source tree.
 pub mod cli;
 pub mod command_structs;
-pub mod download_file;
+pub mod download_artifacts;
 pub mod list_cards;
 pub mod metrics;
 pub mod types;
-pub mod utils;
+pub mod utils {
+    pub mod route_helper;
+    pub mod utils;
+}
