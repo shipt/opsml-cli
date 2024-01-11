@@ -156,3 +156,93 @@ impl RouteHelper {
         Ok(stream_buffer)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use assert_json_diff::assert_json_eq;
+
+    use std::env;
+    use std::fs;
+    use tokio;
+
+    #[tokio::test]
+    async fn test_get_request() {
+        let mut download_server = mockito::Server::new();
+        let url = download_server.url();
+
+        // get files
+        let files_path = "./src/api/test_utils/list_files.json";
+        let files = fs::read_to_string(files_path).expect("Unable to read file");
+
+        // mock list files
+        let get_path = format!("{}/get", url);
+        let mock_get_path = download_server
+            .mock("GET", "/get")
+            .with_status(201)
+            .with_body(&files)
+            .create();
+
+        let _ = RouteHelper::make_get_request(&get_path).await.unwrap();
+        mock_get_path.assert();
+    }
+
+    #[tokio::test]
+    async fn test_post_request() {
+        let mut download_server = mockito::Server::new();
+        let url = download_server.url();
+
+        // get files
+        let files_path = "./src/api/test_utils/list_files.json";
+        let files = fs::read_to_string(files_path).expect("Unable to read file");
+
+        // mock list files
+        let post_path = format!("{}/post", url);
+        let mock_post_path = download_server
+            .mock("POST", "/post")
+            .with_status(201)
+            .with_body(&files)
+            .create();
+
+        let model_metadata_request = types::ModelMetadataRequest {
+            name: Some("name"),
+            version: Some("version"),
+            uid: Some("uid"),
+            ignore_release_candidates: &false,
+        };
+
+        let _ = RouteHelper::make_post_request(&post_path, &model_metadata_request)
+            .await
+            .unwrap();
+
+        mock_post_path.assert();
+    }
+
+    #[tokio::test]
+    async fn test_list_files() {
+        let mut download_server = mockito::Server::new();
+        let url = download_server.url();
+        env::set_var("OPSML_TRACKING_URI", url);
+
+        // get files
+        let files_path = "./src/api/test_utils/list_files.json";
+        let files = fs::read_to_string(files_path).expect("Unable to read file");
+        let list_files: types::ListFileResponse =
+            serde_json::from_str(&fs::read_to_string(files_path).expect("Unable to read file"))
+                .unwrap();
+
+        // mock list files
+        let artifact_path = "/opsml/files/list?path=files";
+        let mock_list_files = download_server
+            .mock("GET", artifact_path)
+            .with_status(201)
+            .with_body(&files)
+            .create();
+
+        let file_response = RouteHelper::list_files(Path::new("files")).await.unwrap();
+        mock_list_files.assert();
+
+        // assert structs are the same
+        assert_json_eq!(list_files, file_response);
+    }
+}

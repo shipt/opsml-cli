@@ -294,36 +294,6 @@ mod tests {
     use uuid::Uuid;
 
     #[tokio::test]
-    async fn test_list_files() {
-        let mut download_server = mockito::Server::new();
-        let url = download_server.url();
-        env::set_var("OPSML_TRACKING_URI", url);
-
-        let rpath = "./src/api/test_utils/trained_model";
-
-        // get files
-        let files_path = "./src/api/test_utils/list_files.json";
-        let files = fs::read_to_string(files_path).expect("Unable to read file");
-        let list_files: types::ListFileResponse =
-            serde_json::from_str(&fs::read_to_string(files_path).expect("Unable to read file"))
-                .unwrap();
-
-        // mock list files
-        let artifact_path = format!("/opsml/files/list?path={}", rpath);
-        let mock_list_files = download_server
-            .mock("GET", artifact_path.as_str())
-            .with_status(201)
-            .with_body(&files)
-            .create();
-
-        let file_response = RouteHelper::list_files(Path::new(rpath)).await.unwrap();
-        mock_list_files.assert();
-
-        // assert structs are the same
-        assert_json_eq!(list_files, file_response);
-    }
-
-    #[tokio::test]
     async fn test_download_model() {
         let mut download_server = mockito::Server::new();
         let url = download_server.url();
