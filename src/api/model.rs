@@ -262,6 +262,7 @@ pub async fn download_model_metadata(
 /// * `onnx` - Flag to download onnx model
 ///
 #[tokio::main]
+#[allow(clippy::too_many_arguments)]
 pub async fn download_model(
     name: Option<&str>,
     version: Option<&str>,
@@ -288,7 +289,6 @@ pub async fn download_model(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use assert_json_diff::assert_json_eq;
     use std::env;
     use std::fs;
     use std::fs::File;
@@ -386,7 +386,7 @@ mod tests {
 
         // create fake model file
         let model_path = Path::new(&test_dir).join("trained_model/model.onnx");
-        std::fs::create_dir_all(&model_path).unwrap();
+        std::fs::create_dir_all(model_path.parent().unwrap()).unwrap();
         let model_rpath = model_path.to_str().unwrap();
         let model_parent = model_path.parent().unwrap().to_str().unwrap();
         let mut file = File::create(&model_path).unwrap();
@@ -394,7 +394,7 @@ mod tests {
 
         // create fake preprocessor file
         let preprocessor_path = Path::new(&test_dir).join("preprocessor/preprocessor.joblib");
-        std::fs::create_dir_all(&preprocessor_path).unwrap();
+        std::fs::create_dir_all(preprocessor_path.parent().unwrap()).unwrap();
         let preprocessor_rpath = preprocessor_path.to_str().unwrap();
         let preprocessor_parent = preprocessor_path.parent().unwrap().to_str().unwrap();
         let mut file = File::create(&preprocessor_path).unwrap();
@@ -493,6 +493,6 @@ mod tests {
         mock_preprocessor_path.assert();
 
         // clean up
-        //s::remove_dir_all(&test_dir).unwrap();
+        fs::remove_dir_all(&test_dir).unwrap();
     }
 }
