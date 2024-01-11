@@ -1,5 +1,8 @@
+/// Copyright (c) Shipt, Inc.
+/// This source code is licensed under the MIT license found in the
+/// LICENSE file in the root directory of this source tree.
 use crate::api::types;
-use crate::api::utils::utils;
+use crate::api::utils;
 use anyhow::Context;
 use futures_util::StreamExt;
 
@@ -10,7 +13,7 @@ use serde::Serialize;
 
 use std::{format, path::Path};
 
-struct RouteHelper {}
+pub struct RouteHelper {}
 
 impl RouteHelper {
     /// async post request for metadata
@@ -130,5 +133,26 @@ impl RouteHelper {
         }
 
         Ok(())
+    }
+
+    /// Parses stream response
+    ///
+    /// # Arguments
+    ///
+    /// * `response` - Response object
+    ///
+    /// # Returns
+    /// * `String` - String representation of response
+    ///
+    pub async fn load_stream_response(response: Response) -> Result<String, anyhow::Error> {
+        let mut response_stream = response.bytes_stream();
+        let mut stream_buffer = String::new();
+        while let Some(item) = response_stream.next().await {
+            let chunk = item.with_context(|| "failed to read stream response")?;
+            let string_chunk = std::str::from_utf8(&chunk).unwrap();
+
+            stream_buffer.push_str(string_chunk);
+        }
+        Ok(stream_buffer)
     }
 }

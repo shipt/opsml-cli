@@ -1,12 +1,11 @@
 /// Copyright (c) Shipt, Inc.
 /// This source code is licensed under the MIT license found in the
 /// LICENSE file in the root directory of this source tree.
+use crate::api::route_helper::RouteHelper;
 use crate::api::types;
-use crate::api::utils::utils;
+use crate::api::utils;
 use anyhow::{Context, Result};
-use futures_util::StreamExt;
 use owo_colors::OwoColorize;
-use reqwest::{self, Response};
 use serde_json;
 use std::path::PathBuf;
 use std::{format, fs, path::Path};
@@ -41,27 +40,6 @@ impl ModelDownloader<'_> {
             .with_context(|| format!("Failed to create directory path for {:?}", prefix))?;
 
         Ok(())
-    }
-
-    /// Parses stream response
-    ///
-    /// # Arguments
-    ///
-    /// * `response` - Response object
-    ///
-    /// # Returns
-    /// * `String` - String representation of response
-    ///
-    async fn load_stream_response(&self, response: Response) -> Result<String, anyhow::Error> {
-        let mut response_stream = response.bytes_stream();
-        let mut stream_buffer = String::new();
-        while let Some(item) = response_stream.next().await {
-            let chunk = item.with_context(|| "failed to read stream response")?;
-            let string_chunk = std::str::from_utf8(&chunk).unwrap();
-
-            stream_buffer.push_str(string_chunk);
-        }
-        Ok(stream_buffer)
     }
 
     /// Saves metadata to json
@@ -105,13 +83,13 @@ impl ModelDownloader<'_> {
             ignore_release_candidates: self.ignore_release_candidates,
         };
 
-        let response = utils::make_post_request(
+        let response = RouteHelper::make_post_request(
             &utils::OpsmlPaths::MetadataDownload.as_str(),
             &model_metadata_request,
         )
         .await?;
 
-        let loaded_response = self.load_stream_response(response).await?;
+        let loaded_response = RouteHelper::load_stream_response(response).await?;
         let model_metadata: types::ModelMetadata = serde_json::from_str(&loaded_response)
             .with_context(|| "Failed to parse model Metadata")?;
 
@@ -210,11 +188,11 @@ impl ModelDownloader<'_> {
     async fn download_file(&self, lpath: &Path, rpath: &str) -> Result<(), anyhow::Error> {
         let filename = lpath.file_name().unwrap().to_str().unwrap().to_string();
         let model_url = format!("{}?path={}", utils::OpsmlPaths::Download.as_str(), rpath);
-        let response = utils::make_get_request(&model_url).await?;
+        let response = RouteHelper::make_get_request(&model_url).await?;
 
         if response.status().is_success() {
             println!("Downloading model: {}, {}", filename.green(), model_url);
-            utils::download_stream_to_file(response, lpath).await?;
+            RouteHelper::download_stream_to_file(response, lpath).await?;
         } else {
             let error_message = format!(
                 "Failed to download model: {}",
@@ -235,7 +213,7 @@ impl ModelDownloader<'_> {
     /// # Returns
     /// * `Result<(), String>` - Result of file download
     async fn download_files(&self, rpath: &Path) -> Result<(), anyhow::Error> {
-        let rpath_files = utils::list_files(rpath).await?;
+        let rpath_files = RouteHelper::list_files(rpath).await?;
 
         println!("Downloading files: {}", rpath_files.files.join(", "));
         // iterate over each file and download
@@ -399,7 +377,7 @@ mod tests {
             quantize: &false,
         };
 
-        let file_response = utils::list_files(Path::new(rpath)).await.unwrap();
+        let file_response = RouteHelper::list_files(Path::new(rpath)).await.unwrap();
         mock_list_files.assert();
 
         // assert structs are the same

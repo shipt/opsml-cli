@@ -1,6 +1,7 @@
 /// Copyright (c) Shipt, Inc.
 /// This source code is licensed under the MIT license found in the
 /// LICENSE file in the root directory of this source tree.
+use crate::api::route_helper::RouteHelper;
 use crate::api::types;
 use crate::api::utils;
 use owo_colors::OwoColorize;
@@ -120,9 +121,11 @@ impl MetricGetter {
     ) -> Result<(), anyhow::Error> {
         let model_metric_request = types::CardRequest { name, version, uid };
 
-        let response =
-            utils::make_post_request(&utils::OpsmlPaths::Metric.as_str(), &model_metric_request)
-                .await?;
+        let response = RouteHelper::make_post_request(
+            &utils::OpsmlPaths::Metric.as_str(),
+            &model_metric_request,
+        )
+        .await?;
 
         if response.status().is_success() {
             let metric_table = self.parse_metric_response(&response.text().await?);
@@ -164,7 +167,7 @@ impl MetricGetter {
             champion_uid,
         };
 
-        let response = utils::make_post_request(
+        let response = RouteHelper::make_post_request(
             &utils::OpsmlPaths::CompareMetric.as_str(),
             &compare_metric_request,
         )
