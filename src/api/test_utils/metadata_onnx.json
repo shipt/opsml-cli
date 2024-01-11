@@ -3,9 +3,9 @@
     "model_class": "SklearnEstimator",
     "model_type": "LinearRegression",
     "model_interface": "SklearnModel",
-    "onnx_uri": "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.1.0/onnx-model.onnx",
+    "onnx_uri": "./src/api/test_utils/trained_model",
     "onnx_version": "1.14.1",
-    "model_uri": "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.1.0/trained-model.joblib",
+    "model_uri": "./src/api/test_utils/trained_model",
     "model_version": "1.1.0",
     "model_team": "devops-ml3",
     "sample_data_uri": "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.1.0/sample-model-data.joblib",
@@ -51,6 +51,6 @@
         "onnx_data_type": null,
         "onnx_version": "1.14.1"
     },
-    "preprocessor_uri": "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.1.0/preprocessor.joblib",
-    "preprocessor_name": "StandardScaler"
+    "preprocessor_uri": null,
+    "preprocessor_name": null
 }

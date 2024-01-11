@@ -278,6 +278,7 @@ impl ModelDownloader<'_> {
     async fn download_files(&self, rpath: &Path) -> Result<(), anyhow::Error> {
         let rpath_files = self.list_files(rpath).await?;
 
+        println!("Downloading files: {}", rpath_files.files.join(", "));
         // iterate over each file and download
         for file in rpath_files.files.iter() {
             let base_path = rpath;
@@ -320,6 +321,8 @@ impl ModelDownloader<'_> {
         }
 
         let model_rpath = self.get_model_uri(download_onnx, &model_metadata);
+
+        println!("Downloading model metadata: {:?}", &model_rpath);
 
         // Get model
         self.download_files(&model_rpath).await?;
@@ -403,31 +406,29 @@ mod tests {
     use uuid::Uuid;
 
     #[tokio::test]
-    async fn test_download_model() {
+    async fn test_list_files() {
         let mut download_server = mockito::Server::new();
         let url = download_server.url();
-
         env::set_var("OPSML_TRACKING_URI", url);
-        // read mock response object
-        let path = "./src/api/test_utils/metadata_non_onnx.json";
-        let data = fs::read_to_string(path).expect("Unable to read file");
-        let mock_metadata: types::ModelMetadata = serde_json::from_str(&data).unwrap();
+
+        let rpath = "./src/api/test_utils/trained_model";
+
+        // directory to write to
         let new_dir = format!("./src/api/test_utils/{}", Uuid::new_v4());
 
-        // mock metadata
-        let mock_metadata_path = download_server
-            .mock("POST", "/opsml/models/metadata")
-            .with_status(201)
-            .with_body(&data)
-            .create();
+        // get files
+        let files_path = "./src/api/test_utils/list_files.json";
+        let files = fs::read_to_string(files_path).expect("Unable to read file");
+        let list_files: types::ListFileResponse =
+            serde_json::from_str(&fs::read_to_string(files_path).expect("Unable to read file"))
+                .unwrap();
 
-        // mock model
-
-        let get_path = "/opsml/files/download?read_path=model.pkl";
-        let mock_model_path = download_server
-            .mock("GET", get_path)
+        // mock list files
+        let preprocessor_path = format!("/opsml/files/list?path={}", rpath);
+        let mock_list_files = download_server
+            .mock("GET", preprocessor_path.as_str())
             .with_status(201)
-            .with_body(&data)
+            .with_body(&files)
             .create();
 
         let downloader = ModelDownloader {
@@ -436,8 +437,84 @@ mod tests {
             uid: None,
             write_dir: &new_dir,
             ignore_release_candidates: &false,
-            onnx: &false,
-            no_onnx: &true,
+            onnx: &true,
+            no_onnx: &false,
+            quantize: &false,
+        };
+
+        let file_response = downloader.list_files(Path::new(rpath)).await.unwrap();
+        mock_list_files.assert();
+
+        // assert structs are the same
+        assert_json_eq!(list_files, file_response);
+    }
+
+    #[tokio::test]
+    async fn test_download_model() {
+        let mut download_server = mockito::Server::new();
+        let url = download_server.url();
+
+        env::set_var("OPSML_TRACKING_URI", url);
+
+        //paths
+        let model_path = "./src/api/test_utils/trained_model/sklearn_pipeline-v1-0-0.onnx";
+        let preprocessor_path = "./src/api/test_utils/trained_model/tokenizer.json";
+
+        // get metadata
+        let metadata_path = "./src/api/test_utils/metadata_onnx.json";
+        let metadata = fs::read_to_string(metadata_path).expect("Unable to read file");
+        let mock_metadata: types::ModelMetadata =
+            serde_json::from_str(&fs::read_to_string(metadata_path).expect("Unable to read file"))
+                .unwrap();
+
+        // get files
+        let files_path = "./src/api/test_utils/list_files.json";
+        let files = fs::read_to_string(files_path).expect("Unable to read file");
+        let _: types::ListFileResponse =
+            serde_json::from_str(&fs::read_to_string(files_path).expect("Unable to read file"))
+                .unwrap();
+
+        // directory to write to
+        let new_dir = format!("./src/api/test_utils/{}", Uuid::new_v4());
+
+        // mock metadata
+        let mock_metadata_path = download_server
+            .mock("POST", "/opsml/models/metadata")
+            .with_status(201)
+            .with_body(&metadata)
+            .create();
+
+        // mock list files
+        let _ = download_server
+            .mock("GET", "/opsml/files/list")
+            .with_status(201)
+            .with_body(&files)
+            .create();
+
+        // mock model
+        let get_path = format!("/opsml/files/download?path={}", model_path);
+        let mock_preprocessor_path = download_server
+            .mock("GET", get_path.as_str())
+            .with_status(201)
+            .with_body(&metadata)
+            .create();
+
+        // mock preprocessor
+        let get_path = format!("/opsml/files/download?path={}", preprocessor_path);
+        let mock_model_path = download_server
+            .mock("GET", get_path.as_str())
+            .with_status(201)
+            .with_body(&metadata)
+            .create();
+
+        let downloader = ModelDownloader {
+            name: Some("name"),
+            version: Some("version"),
+            uid: None,
+            write_dir: &new_dir,
+            ignore_release_candidates: &false,
+            onnx: &true,
+            no_onnx: &false,
             quantize: &false,
         };
 
@@ -449,8 +526,9 @@ mod tests {
         downloader.download_model().await.unwrap();
 
         mock_model_path.assert();
+        mock_preprocessor_path.assert();
 
         // clean up
-        fs::remove_dir_all(&new_dir).unwrap();
+        //fs::remove_dir_all(&new_dir).unwrap();
     }
 }

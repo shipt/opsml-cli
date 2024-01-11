@@ -5,7 +5,7 @@
     "model_interface": "SklearnModel",
     "onnx_uri": null,
     "onnx_version": null,
-    "model_uri": "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.2.0/trained-model.joblib",
+    "model_uri": "./src/api/test_utils/trained_model/sklearn_pipeline-v1-0-0.onnx",
     "model_version": "1.2.0",
     "model_team": "devops-ml3",
     "sample_data_uri": "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.2.0/sample-model-data.joblib",
