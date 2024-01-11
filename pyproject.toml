@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "opsml-cli"
-version = "0.2.1"
+version = "0.3.0"
 description = "Rust-based CLI for interacting with OpsML"
 readme = "README.md"
-authors = ["Thorrester <48217609+thorrester@users.noreply.github.com>"]
+authors = [
+    { name = 'Steven Forrester', email = 'steven.forrester@shipt.com' }
+]
 
 
 [tool.poetry.dependencies]
