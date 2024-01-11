@@ -15,20 +15,20 @@ env:
   RUSTFLAGS: -C debuginfo=0  # Do not produce debug symbols to keep memory usage down
 
 jobs:
-  #test-leaks:
-  #  name: test leaks
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #    - uses: actions/checkout@v4
-#
-  #    - name: Gitleaks
-  #      uses: gitleaks/gitleaks-action@v2
-  #      env:
-  #        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}}
+  test-leaks:
+    name: test leaks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE}}
 
   test-os:
-    #needs: [test-leaks]
+    needs: [test-leaks]
     name: test ${{ matrix.os }}
 
     strategy:
