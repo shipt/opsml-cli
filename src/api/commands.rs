@@ -84,16 +84,20 @@ pub struct DownloadModelArgs {
     pub uid: Option<String>,
 
     /// Write directory
-    #[arg(long = "write-dir", default_value = ".models")]
+    #[arg(long = "write-dir", default_value = "models")]
     pub write_dir: String,
 
     /// Boolean indicating whether to download onnx or trained model
-    #[arg(long = "no-onnx", default_value = "false")]
-    pub no_onnx: bool,
-
-    /// Boolean indicating whether to download onnx or trained model
-    #[arg(long = "onnx", default_value = "true")]
+    #[arg(long = "onnx", default_value = "false")]
     pub onnx: bool,
+
+    /// Boolean indicating whether to use the quantized version of the model (huggingface only)
+    #[arg(long = "quantize", default_value = "false")]
+    pub quantize: bool,
+
+    /// Boolean indicating whether to download any preprocessors with the model
+    #[arg(long = "preprocessor", default_value = "false")]
+    pub preprocessor: bool,
 
     /// ignore release candidate
     #[arg(long = "ignore_release_candidate", default_value = "false")]

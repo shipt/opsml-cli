@@ -22,6 +22,29 @@ pip install opsml-cli
 
 To get a list of commands, run `opsml-cli help`.
 
+### Listing Cards
+
+```console
+
+$ opsml-cli list-cards --registry model
+```
+
+### Downloading Model
+
+```console
+# Download model only
+
+$ opsml-cli download-model --name model -- version 1.0.0  # name version
+$ opsml-cli download-model --uid {{uid}} # model from uis
+
+# Download onnx version of model
+
+$ opsml-cli download-model --name model -- version 1.0.0  --onnx
+
+# Download model and preprocessor (if available)
+opsml-cli download-model --name model -- version 1.0.0  --onnx --preprocessor
+```
+
 ## Contributing
 If you'd like to contribute, be sure to check out our [contributing guide](./CONTRIBUTING.md)!
 

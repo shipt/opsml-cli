@@ -1,10 +1,10 @@
+use api::cards::list_cards;
+use api::metrics::{compare_model_metrics, get_model_metrics};
 /// Copyright (c) Shipt, Inc.
 /// This source code is licensed under the MIT license found in the
 /// LICENSE file in the root directory of this source tree.
-use api::download_file::download_model;
-use api::download_file::download_model_metadata;
-use api::list_cards::list_cards;
-use api::metrics::{compare_model_metrics, get_model_metrics};
+use api::model::download_model;
+use api::model::download_model_metadata;
 mod api;
 use anyhow::{Context, Result};
 use api::cli::{Cli, Commands, LOGO_TEXT};
@@ -59,8 +59,9 @@ fn main() -> Result<()> {
                 args.version.as_deref(),
                 args.uid.as_deref(),
                 &args.write_dir,
-                &args.no_onnx,
                 &args.onnx,
+                &args.quantize,
+                &args.preprocessor,
                 &args.ignore_release_candidates,
             )
             .with_context(|| {

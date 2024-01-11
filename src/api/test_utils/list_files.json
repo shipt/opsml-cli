@@ -1,0 +1,6 @@
+{
+    "files": [
+        "./src/api/test_utils/trained_model/sklearn_pipeline-v1-0-0.onnx",
+        "./src/api/test_utils/trained_model/tokenizer.json"
+    ]
+}
