@@ -34,8 +34,8 @@ $ opsml-cli list-cards --registry model
 ```console
 # Download model only
 
-$ opsml-cli download-model --name model -- version 1.0.0  # name version
-$ opsml-cli download-model --uid {{uid}} # model from uis
+$ opsml-cli download-model --name {{model}} -- version {{version}}  # name version
+$ opsml-cli download-model --uid {{uid}} # model from uid
 
 # Download onnx version of model
 
