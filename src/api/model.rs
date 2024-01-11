@@ -376,4 +376,123 @@ mod tests {
         // clean up
         fs::remove_dir_all(&test_dir).unwrap();
     }
+
+    #[tokio::test]
+    async fn test_download_processor_model() {
+        let uid = &Uuid::new_v4().to_string();
+        // Populate files
+        let test_dir = format!("./src/api/test_utils/{}", uid);
+        std::fs::create_dir_all(&test_dir).unwrap();
+
+        // create fake model file
+        let model_path = Path::new(&test_dir).join("trained_model/model.onnx");
+        std::fs::create_dir_all(&model_path).unwrap();
+        let model_rpath = model_path.to_str().unwrap();
+        let model_parent = model_path.parent().unwrap().to_str().unwrap();
+        let mut file = File::create(&model_path).unwrap();
+        file.write_all(b"model").unwrap();
+
+        // create fake preprocessor file
+        let preprocessor_path = Path::new(&test_dir).join("preprocessor/preprocessor.joblib");
+        std::fs::create_dir_all(&preprocessor_path).unwrap();
+        let preprocessor_rpath = preprocessor_path.to_str().unwrap();
+        let preprocessor_parent = preprocessor_path.parent().unwrap().to_str().unwrap();
+        let mut file = File::create(&preprocessor_path).unwrap();
+        file.write_all(b"preprocessor").unwrap();
+
+        // load and write metadata
+        let metadata_path = Path::new(&test_dir).join("metadata.json");
+        let metadata = fs::read_to_string("./src/api/test_utils/metadata.json").unwrap();
+        let mut metadata_file = File::create(metadata_path).unwrap();
+        metadata_file.write_all(metadata.as_bytes()).unwrap();
+
+        let mut model_metadata: types::ModelMetadata = serde_json::from_str(&metadata).unwrap();
+        model_metadata.onnx_uri = Some(model_parent.to_string());
+        model_metadata.preprocessor_uri = Some(preprocessor_parent.to_string());
+
+        // setup server
+        let mut download_server = mockito::Server::new();
+        let url = download_server.url();
+        env::set_var("OPSML_TRACKING_URI", url);
+
+        // get model files
+        let model_files = types::ListFileResponse {
+            files: vec![model_rpath.to_string()],
+        };
+
+        let model_file_response = serde_json::to_string(&model_files).unwrap();
+
+        // get preprocessor files
+        let preprocessor_files = types::ListFileResponse {
+            files: vec![preprocessor_rpath.to_string()],
+        };
+
+        let preprocessor_file_response = serde_json::to_string(&preprocessor_files).unwrap();
+
+        // directory to write to
+        let new_dir = format!("./src/api/test_utils/{}/{}", uid, "downloaded");
+
+        // mock metadata
+        let mock_metadata_path = download_server
+            .mock("POST", "/opsml/models/metadata")
+            .with_status(201)
+            .with_body(serde_json::to_string(&model_metadata).unwrap())
+            .create();
+
+        // mock list model files
+        let artifact_model_path = format!("/opsml/files/list?path={}", model_parent);
+        let model_list_path = download_server
+            .mock("GET", artifact_model_path.as_str())
+            .with_status(201)
+            .with_body(&model_file_response)
+            .create();
+
+        // mock list preprocessor files
+        let artifact_preprocessor_path = format!("/opsml/files/list?path={}", preprocessor_parent);
+        let preprocessor_list_path = download_server
+            .mock("GET", artifact_preprocessor_path.as_str())
+            .with_status(201)
+            .with_body(&preprocessor_file_response)
+            .create();
+
+        // mock model
+        let get_path = format!("/opsml/files/download?path={}", model_rpath);
+        let mock_model_path = download_server
+            .mock("GET", get_path.as_str())
+            .with_status(201)
+            .with_body(&metadata)
+            .create();
+
+        // mock model
+        let get_path = format!("/opsml/files/download?path={}", preprocessor_rpath);
+        let mock_preprocessor_path = download_server
+            .mock("GET", get_path.as_str())
+            .with_status(201)
+            .with_body(&metadata)
+            .create();
+
+        let downloader = ModelDownloader {
+            name: Some("name"),
+            version: Some("version"),
+            uid: None,
+            write_dir: &new_dir,
+            ignore_release_candidates: &false,
+            onnx: &true,
+            no_onnx: &false,
+            quantize: &false,
+        };
+
+        let _ = downloader.get_metadata().await.unwrap();
+        mock_metadata_path.assert();
+
+        downloader.download_model().await.unwrap();
+
+        model_list_path.assert();
+        preprocessor_list_path.assert();
+        mock_model_path.assert();
+        mock_preprocessor_path.assert();
+
+        // clean up
+        //s::remove_dir_all(&test_dir).unwrap();
+    }
 }
