@@ -84,7 +84,7 @@ pub struct DownloadModelArgs {
     pub uid: Option<String>,
 
     /// Write directory
-    #[arg(long = "write-dir", default_value = ".models")]
+    #[arg(long = "write-dir", default_value = "models")]
     pub write_dir: String,
 
     /// Boolean indicating whether to download onnx or trained model

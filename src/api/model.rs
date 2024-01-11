@@ -169,8 +169,6 @@ impl ModelDownloader<'_> {
     async fn download_files(&self, rpath: &Path) -> Result<(), anyhow::Error> {
         let rpath_files = RouteHelper::list_files(rpath).await?;
 
-        println!("Downloading files from {:?}", rpath_files);
-
         // iterate over each file and download
         for file in rpath_files.files.iter() {
             let base_path = rpath;
