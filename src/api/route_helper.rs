@@ -5,12 +5,9 @@ use crate::api::types;
 use crate::api::utils;
 use anyhow::Context;
 use futures_util::StreamExt;
-
 use owo_colors::OwoColorize;
-
 use reqwest::{self, Response};
 use serde::Serialize;
-
 use std::{format, path::Path};
 
 pub struct RouteHelper {}
