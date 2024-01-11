@@ -5,10 +5,9 @@ use crate::api::route_helper::RouteHelper;
 use crate::api::types;
 use crate::api::utils;
 use anyhow::{Context, Result};
-use owo_colors::OwoColorize;
 use serde_json;
 use std::path::PathBuf;
-use std::{format, fs, path::Path};
+use std::{fs, path::Path};
 use tokio;
 
 const MODEL_METADATA_FILE: &str = "metadata.json";
@@ -26,22 +25,6 @@ pub struct ModelDownloader<'a> {
 }
 
 impl ModelDownloader<'_> {
-    /// Create parent directories associated with path
-    ///
-    /// # Arguments
-    ///
-    /// * `path` - path to create
-    ///
-    fn create_dir_path(&self, path: &Path) -> Result<(), anyhow::Error> {
-        let prefix = path
-            .parent()
-            .with_context(|| "Failed to get parent directory")?;
-        std::fs::create_dir_all(prefix)
-            .with_context(|| format!("Failed to create directory path for {:?}", prefix))?;
-
-        Ok(())
-    }
-
     /// Saves metadata to json
     ///
     /// # Arguments
@@ -94,7 +77,7 @@ impl ModelDownloader<'_> {
             .with_context(|| "Failed to parse model Metadata")?;
 
         // create save path for metadata
-        self.create_dir_path(&save_path)?;
+        utils::create_dir_path(&save_path)?;
         self.save_metadata_to_json(&model_metadata, &save_path)
             .await?;
 
@@ -174,36 +157,6 @@ impl ModelDownloader<'_> {
         Ok(model_metadata)
     }
 
-    /// Downloads an artifact file
-    ///
-    /// # Arguments
-    ///
-    /// * `url` - url of opsml server
-    /// * `uri` - uri of model
-    /// * `local_save_path` - path to save model to
-    ///
-    /// # Returns
-    /// * `Result<(), String>` - Result of file download
-    ///
-    async fn download_file(&self, lpath: &Path, rpath: &str) -> Result<(), anyhow::Error> {
-        let filename = lpath.file_name().unwrap().to_str().unwrap().to_string();
-        let model_url = format!("{}?path={}", utils::OpsmlPaths::Download.as_str(), rpath);
-        let response = RouteHelper::make_get_request(&model_url).await?;
-
-        if response.status().is_success() {
-            println!("Downloading model: {}, {}", filename.green(), model_url);
-            RouteHelper::download_stream_to_file(response, lpath).await?;
-        } else {
-            let error_message = format!(
-                "Failed to download model: {}",
-                response.text().await.unwrap().red()
-            );
-            return Err(anyhow::anyhow!(error_message));
-        }
-
-        Ok(())
-    }
-
     /// Downloads files associated with a model
     ///
     /// # Arguments
@@ -235,8 +188,8 @@ impl ModelDownloader<'_> {
                 )
             };
 
-            self.create_dir_path(&lpath)?;
-            self.download_file(&lpath, file).await?;
+            utils::create_dir_path(&lpath)?;
+            RouteHelper::download_file(&lpath, file).await?;
         }
 
         Ok(())
@@ -348,9 +301,6 @@ mod tests {
 
         let rpath = "./src/api/test_utils/trained_model";
 
-        // directory to write to
-        let new_dir = format!("./src/api/test_utils/{}", Uuid::new_v4());
-
         // get files
         let files_path = "./src/api/test_utils/list_files.json";
         let files = fs::read_to_string(files_path).expect("Unable to read file");
@@ -365,17 +315,6 @@ mod tests {
             .with_status(201)
             .with_body(&files)
             .create();
-
-        let downloader = ModelDownloader {
-            name: Some("name"),
-            version: Some("version"),
-            uid: None,
-            write_dir: &new_dir,
-            ignore_release_candidates: &false,
-            onnx: &true,
-            no_onnx: &false,
-            quantize: &false,
-        };
 
         let file_response = RouteHelper::list_files(Path::new(rpath)).await.unwrap();
         mock_list_files.assert();

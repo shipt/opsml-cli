@@ -1,6 +1,7 @@
 /// Copyright (c) Shipt, Inc.
 /// This source code is licensed under the MIT license found in the
 /// LICENSE file in the root directory of this source tree.
+use crate::api::route_helper::RouteHelper;
 use crate::api::types;
 use crate::api::utils;
 use anyhow::{Context, Result};
@@ -126,10 +127,12 @@ impl CardLister<'_> {
             ignore_release_candidates: self.ignore_release_candidates,
         };
 
-        let response =
-            utils::make_post_request(&utils::OpsmlPaths::ListCard.as_str(), &list_table_request)
-                .await
-                .unwrap();
+        let response = RouteHelper::make_post_request(
+            &utils::OpsmlPaths::ListCard.as_str(),
+            &list_table_request,
+        )
+        .await
+        .unwrap();
 
         Ok(response)
     }

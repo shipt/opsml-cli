@@ -7,6 +7,7 @@ use owo_colors::OwoColorize;
 use reqwest::Url;
 use reqwest::{self};
 use std::env;
+use std::{format, path::Path};
 
 lazy_static! {
     static ref OPSML_TRACKING_URI: String = match env::var("OPSML_TRACKING_URI") {
@@ -96,6 +97,22 @@ pub async fn create_client(url: &str) -> Result<(reqwest::Client, Url), anyhow::
     let client = reqwest::Client::new();
 
     Ok((client, parsed_url))
+}
+
+/// Create parent directories associated with path
+///
+/// # Arguments
+///
+/// * `path` - path to create
+///
+pub fn create_dir_path(path: &Path) -> Result<(), anyhow::Error> {
+    let prefix = path
+        .parent()
+        .with_context(|| "Failed to get parent directory")?;
+    std::fs::create_dir_all(prefix)
+        .with_context(|| format!("Failed to create directory path for {:?}", prefix))?;
+
+    Ok(())
 }
 
 #[cfg(test)]
