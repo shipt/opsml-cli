@@ -3,12 +3,12 @@
     "model_class": "SklearnEstimator",
     "model_type": "LinearRegression",
     "model_interface": "SklearnModel",
-    "onnx_uri": null,
-    "onnx_version": null,
-    "model_uri": "./src/api/test_utils/trained_model/sklearn_pipeline-v1-0-0.onnx",
-    "model_version": "1.2.0",
+    "onnx_uri": "opsml-root:/",
+    "onnx_version": "1.14.1",
+    "model_uri": "opsml-root:/",
+    "model_version": "1.1.0",
     "model_team": "devops-ml3",
-    "sample_data_uri": "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.2.0/sample-model-data.joblib",
+    "sample_data_uri": "opsml-root:/",
     "opsml_version": "2.0.0",
     "data_schema": {
         "data_type": "numpy.ndarray",
@@ -30,11 +30,27 @@
                 ]
             }
         },
-        "onnx_input_features": null,
-        "onnx_output_features": null,
+        "onnx_input_features": {
+            "predict": {
+                "feature_type": "tensor(float)",
+                "shape": [
+                    null,
+                    11
+                ]
+            }
+        },
+        "onnx_output_features": {
+            "variable": {
+                "feature_type": "tensor(float)",
+                "shape": [
+                    null,
+                    1
+                ]
+            }
+        },
         "onnx_data_type": null,
-        "onnx_version": null
+        "onnx_version": "1.14.1"
     },
-    "preprocessor_uri": "opsml-root:/OPSML_MODEL_REGISTRY/devops-ml3/linear-reg-model3/v1.2.0/preprocessor.joblib",
-    "preprocessor_name": "StandardScaler"
+    "preprocessor_uri": null,
+    "preprocessor_name": null
 }

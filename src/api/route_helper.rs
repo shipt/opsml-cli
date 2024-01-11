@@ -73,6 +73,8 @@ impl RouteHelper {
             utils::OpsmlPaths::ListFile.as_str(),
             rpath.to_str().unwrap()
         );
+
+        println!("Listing files from {}", file_url.green());
         let response = RouteHelper::make_get_request(&file_url).await?;
         let files = response.json::<types::ListFileResponse>().await?;
         Ok(files)

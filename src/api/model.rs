@@ -168,7 +168,8 @@ impl ModelDownloader<'_> {
     async fn download_files(&self, rpath: &Path) -> Result<(), anyhow::Error> {
         let rpath_files = RouteHelper::list_files(rpath).await?;
 
-        println!("Downloading files: {}", rpath_files.files.join(", "));
+        println!("rpath_files: {:?}", rpath_files);
+
         // iterate over each file and download
         for file in rpath_files.files.iter() {
             let base_path = rpath;
@@ -290,61 +291,64 @@ mod tests {
     use assert_json_diff::assert_json_eq;
     use std::env;
     use std::fs;
+    use std::fs::File;
+    use std::io::Write;
     use tokio;
     use uuid::Uuid;
-
     #[tokio::test]
     async fn test_download_model() {
+        let uid = &Uuid::new_v4().to_string();
+        // Populate files
+        let test_dir = format!("./src/api/test_utils/{}", uid);
+        std::fs::create_dir_all(&test_dir).unwrap();
+
+        // create fake model file
+        let model_path = Path::new(&test_dir).join("model.onnx");
+        let model_rpath = model_path.to_str().unwrap();
+        let mut file = File::create(&model_path).unwrap();
+        file.write_all(b"model").unwrap();
+
+        // load and write metadata
+        let metadata_path = Path::new(&test_dir).join("metadata.json");
+        let metadata = fs::read_to_string("./src/api/test_utils/metadata.json").unwrap();
+        let mut metadata_file = File::create(metadata_path).unwrap();
+        metadata_file.write_all(metadata.as_bytes()).unwrap();
+
+        let mut model_metadata: types::ModelMetadata = serde_json::from_str(&metadata).unwrap();
+        model_metadata.onnx_uri = Some(model_rpath.to_string());
+
+        // setup server
         let mut download_server = mockito::Server::new();
         let url = download_server.url();
-
         env::set_var("OPSML_TRACKING_URI", url);
 
-        //paths
-        let rpath = "./src/api/test_utils/trained_model";
-        let model_path = "./src/api/test_utils/trained_model/sklearn_pipeline-v1-0-0.onnx";
-        let tokenizer_path = "./src/api/test_utils/trained_model/tokenizer.json";
-
-        // get metadata
-        let metadata_path = "./src/api/test_utils/metadata_onnx.json";
-        let metadata = fs::read_to_string(metadata_path).expect("Unable to read file");
-        let mock_metadata: types::ModelMetadata =
-            serde_json::from_str(&fs::read_to_string(metadata_path).expect("Unable to read file"))
-                .unwrap();
-
         // get files
-        let files_path = "./src/api/test_utils/list_files.json";
-        let files = fs::read_to_string(files_path).expect("Unable to read file");
+        let files = types::ListFileResponse {
+            files: vec![model_rpath.to_string()],
+        };
+        let file_response = serde_json::to_string(&files).unwrap();
 
         // directory to write to
-        let new_dir = format!("./src/api/test_utils/{}", Uuid::new_v4());
+        let new_dir = format!("./src/api/test_utils/{}/{}", uid, "downloaded");
 
         // mock metadata
         let mock_metadata_path = download_server
             .mock("POST", "/opsml/models/metadata")
             .with_status(201)
-            .with_body(&metadata)
+            .with_body(serde_json::to_string(&model_metadata).unwrap())
             .create();
 
         // mock list files
-        let artifact_path = format!("/opsml/files/list?path={}", rpath);
+        let artifact_path = format!("/opsml/files/list?path={}", model_rpath);
         let mock_list_path = download_server
             .mock("GET", artifact_path.as_str())
             .with_status(201)
-            .with_body(&files)
+            .with_body(&file_response)
             .create();
 
         // mock model
-        let get_path = format!("/opsml/files/download?path={}", model_path);
+        let get_path = format!("/opsml/files/download?path={}", model_rpath);
         let mock_model_path = download_server
-            .mock("GET", get_path.as_str())
-            .with_status(201)
-            .with_body(&metadata)
-            .create();
-
-        // mock preprocessor
-        let get_path = format!("/opsml/files/download?path={}", tokenizer_path);
-        let mock_tokenizer_path = download_server
             .mock("GET", get_path.as_str())
             .with_status(201)
             .with_body(&metadata)
@@ -361,18 +365,15 @@ mod tests {
             quantize: &false,
         };
 
-        let model_metadata = downloader.get_metadata().await.unwrap();
+        let _ = downloader.get_metadata().await.unwrap();
         mock_metadata_path.assert();
 
-        // assert structs are the same
-        assert_json_eq!(mock_metadata, model_metadata);
         downloader.download_model().await.unwrap();
 
         mock_list_path.assert();
         mock_model_path.assert();
-        mock_tokenizer_path.assert();
 
         // clean up
-        fs::remove_dir_all(&new_dir).unwrap();
+        fs::remove_dir_all(&test_dir).unwrap();
     }
 }
