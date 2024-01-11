@@ -22,6 +22,7 @@ pub struct ModelDownloader<'a> {
     pub onnx: &'a bool,
     pub no_onnx: &'a bool,
     pub quantize: &'a bool,
+    pub preprocessor: &'a bool,
 }
 
 impl ModelDownloader<'_> {
@@ -168,7 +169,7 @@ impl ModelDownloader<'_> {
     async fn download_files(&self, rpath: &Path) -> Result<(), anyhow::Error> {
         let rpath_files = RouteHelper::list_files(rpath).await?;
 
-        println!("rpath_files: {:?}", rpath_files);
+        println!("Downloading files from {:?}", rpath_files);
 
         // iterate over each file and download
         for file in rpath_files.files.iter() {
@@ -176,6 +177,7 @@ impl ModelDownloader<'_> {
 
             // check if rpath is a directory
             let lpath = if rpath.extension().is_none() {
+                println!("rpath is a directory {:?} {:?}", rpath, base_path);
                 // if rpath is a directory, append filename to rpath
                 let path_to_file = Path::new(file)
                     .strip_prefix(base_path)
@@ -204,11 +206,13 @@ impl ModelDownloader<'_> {
         let model_metadata = self.get_metadata().await?;
 
         // Get preprocessor
-        let preprocessor_rpath = self.get_preprocessor_uri(&model_metadata);
+        if self.preprocessor == &true {
+            let preprocessor_rpath = self.get_preprocessor_uri(&model_metadata);
 
-        if preprocessor_rpath.is_some() {
-            let preprocessor_rpath = preprocessor_rpath.unwrap();
-            self.download_files(&preprocessor_rpath).await?;
+            if preprocessor_rpath.is_some() {
+                let preprocessor_rpath = preprocessor_rpath.unwrap();
+                self.download_files(&preprocessor_rpath).await?;
+            }
         }
 
         let model_rpath = self.get_model_uri(download_onnx, &model_metadata);
@@ -246,6 +250,7 @@ pub async fn download_model_metadata(
         onnx: &false,
         no_onnx: &false,
         quantize: &false,
+        preprocessor: &false,
     };
     model_downloader.get_metadata().await
 }
@@ -271,6 +276,7 @@ pub async fn download_model(
     no_onnx: &bool,
     onnx: &bool,
     quantize: &bool,
+    preprocessor: &bool,
     ignore_release_candidates: &bool,
 ) -> Result<(), anyhow::Error> {
     let model_downloader = ModelDownloader {
@@ -282,6 +288,7 @@ pub async fn download_model(
         onnx,
         no_onnx,
         quantize,
+        preprocessor,
     };
     model_downloader.download_model().await
 }
@@ -363,6 +370,7 @@ mod tests {
             onnx: &true,
             no_onnx: &false,
             quantize: &false,
+            preprocessor: &false,
         };
 
         let _ = downloader.get_metadata().await.unwrap();
@@ -393,10 +401,17 @@ mod tests {
         file.write_all(b"model").unwrap();
 
         // create fake preprocessor file
-        let preprocessor_path = Path::new(&test_dir).join("preprocessor/preprocessor.joblib");
+        let preprocessor_path =
+            Path::new(&test_dir).join("preprocessor/nested/preprocessor.joblib");
         std::fs::create_dir_all(preprocessor_path.parent().unwrap()).unwrap();
         let preprocessor_rpath = preprocessor_path.to_str().unwrap();
-        let preprocessor_parent = preprocessor_path.parent().unwrap().to_str().unwrap();
+        let preprocessor_parent = preprocessor_path
+            .parent()
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_str()
+            .unwrap();
         let mut file = File::create(&preprocessor_path).unwrap();
         file.write_all(b"preprocessor").unwrap();
 
@@ -480,6 +495,7 @@ mod tests {
             onnx: &true,
             no_onnx: &false,
             quantize: &false,
+            preprocessor: &true,
         };
 
         let _ = downloader.get_metadata().await.unwrap();
@@ -491,6 +507,10 @@ mod tests {
         preprocessor_list_path.assert();
         mock_model_path.assert();
         mock_preprocessor_path.assert();
+        assert!(Path::new(&test_dir)
+            .join("downloaded/nested/preprocessor.joblib")
+            .exists());
+        assert!(Path::new(&test_dir).join("downloaded/model.onnx").exists());
 
         // clean up
         fs::remove_dir_all(&test_dir).unwrap();

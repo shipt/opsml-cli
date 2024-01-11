@@ -62,6 +62,7 @@ fn main() -> Result<()> {
                 &args.no_onnx,
                 &args.onnx,
                 &args.quantize,
+                &args.preprocessor,
                 &args.ignore_release_candidates,
             )
             .with_context(|| {
