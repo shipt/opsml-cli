@@ -105,18 +105,16 @@ impl ModelDownloader<'_> {
                 model_metadata
                     .quantized_model_uri
                     .clone()
-                    .with_context(|| NO_ONNX_URI.red())
+                    .with_context(|| NO_QUANTIZE_URI.red())?
             } else {
                 model_metadata
                     .onnx_uri
                     .clone()
-                    .with_context(|| NO_QUANTIZE_URI.red())
+                    .with_context(|| NO_ONNX_URI.red())?
             }
         } else {
-            Ok(model_metadata.model_uri.clone())
+            model_metadata.model_uri.clone()
         };
-
-        let uri = uri.unwrap();
 
         let filepath = std::path::Path::new(&uri);
 
