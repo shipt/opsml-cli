@@ -61,10 +61,11 @@ impl OpsmlPaths {
 
 pub async fn check_args(
     name: Option<&str>,
+    repository: Option<&str>,
     version: Option<&str>,
     uid: Option<&str>,
 ) -> Result<(), anyhow::Error> {
-    let common_args = [name, version];
+    let common_args = [name, version, repository];
     let has_common = common_args.iter().all(|i| i.is_none());
 
     let has_uid = uid.is_none();
@@ -73,7 +74,7 @@ pub async fn check_args(
         Ok(())
     } else {
         Err(anyhow::Error::msg(
-            "Please provide either a uid or a name and version",
+            "Please provide either a uid or a name, repository, and version",
         ))
     }
 }

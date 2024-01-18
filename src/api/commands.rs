@@ -56,6 +56,10 @@ pub struct ModelMetadataArgs {
     #[arg(long = "version")]
     pub version: Option<String>,
 
+    /// Card repository
+    #[arg(long = "repository")]
+    pub repository: Option<String>,
+
     /// Card uid
     #[arg(long = "uid")]
     pub uid: Option<String>,
@@ -78,6 +82,10 @@ pub struct DownloadModelArgs {
     /// Card version
     #[arg(long = "version")]
     pub version: Option<String>,
+
+    /// Card repository
+    #[arg(long = "repository")]
+    pub repository: Option<String>,
 
     /// Card uid
     #[arg(long = "uid")]

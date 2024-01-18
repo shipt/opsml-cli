@@ -18,6 +18,7 @@ const NO_QUANTIZE_URI: &str = "No quantize model uri found but quantize flag set
 pub struct ModelDownloader<'a> {
     pub name: Option<&'a str>,
     pub version: Option<&'a str>,
+    pub repository: Option<&'a str>,
     pub uid: Option<&'a str>,
     pub write_dir: &'a str,
     pub ignore_release_candidates: &'a bool,
@@ -157,7 +158,7 @@ impl ModelDownloader<'_> {
     ///
     async fn get_metadata(&self) -> Result<types::ModelMetadata, anyhow::Error> {
         // check args first
-        utils::check_args(self.name, self.version, self.uid)
+        utils::check_args(self.name, self.repository, self.version, self.uid)
             .await
             .unwrap();
         let model_metadata = self.get_model_metadata().await?;
@@ -238,6 +239,7 @@ impl ModelDownloader<'_> {
 pub async fn download_model_metadata(
     name: Option<&str>,
     version: Option<&str>,
+    repository: Option<&str>,
     uid: Option<&str>,
     write_dir: &str,
     ignore_release_candidates: &bool,
@@ -247,6 +249,7 @@ pub async fn download_model_metadata(
     let model_downloader = ModelDownloader {
         name,
         version,
+        repository,
         uid,
         write_dir,
         ignore_release_candidates,
@@ -273,6 +276,7 @@ pub async fn download_model_metadata(
 pub async fn download_model(
     name: Option<&str>,
     version: Option<&str>,
+    repository: Option<&str>,
     uid: Option<&str>,
     write_dir: &str,
     onnx: &bool,
@@ -283,6 +287,7 @@ pub async fn download_model(
     let model_downloader = ModelDownloader {
         name,
         version,
+        repository,
         uid,
         write_dir,
         ignore_release_candidates,
@@ -364,6 +369,7 @@ mod tests {
         let downloader = ModelDownloader {
             name: Some("name"),
             version: Some("version"),
+            repository: Some("repo"),
             uid: None,
             write_dir: &new_dir,
             ignore_release_candidates: &false,
@@ -488,6 +494,7 @@ mod tests {
         let downloader = ModelDownloader {
             name: Some("name"),
             version: Some("version"),
+            repository: Some("repo"),
             uid: None,
             write_dir: &new_dir,
             ignore_release_candidates: &false,
