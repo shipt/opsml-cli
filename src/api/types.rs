@@ -10,7 +10,7 @@ use tabled::Tabled;
 pub struct ListTableRequest<'a> {
     pub registry_type: &'a str,
     pub name: Option<&'a str>,
-    pub team: Option<&'a str>,
+    pub repository: Option<&'a str>,
     pub version: Option<&'a str>,
     pub uid: Option<&'a str>,
     pub limit: Option<&'a i16>,
@@ -37,7 +37,7 @@ pub struct ModelMetadataRequest<'a> {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Card {
     pub name: String,
-    pub team: String,
+    pub repository: String,
     pub date: Option<String>,
     pub user_email: String,
     pub version: String,
@@ -89,7 +89,7 @@ pub struct ListCardResponse {
 #[derive(Tabled)]
 pub struct CardTable {
     pub name: String,
-    pub team: String,
+    pub repository: String,
     pub date: String,
     pub user_email: String,
     pub version: String,
@@ -121,7 +121,7 @@ pub struct ModelMetadata {
     pub onnx_version: Option<String>,
     pub model_uri: String,
     pub model_version: String,
-    pub model_team: String,
+    pub model_repository: String,
     pub sample_data_uri: String,
     pub data_schema: DataSchema,
     pub preprocessor_uri: Option<String>,

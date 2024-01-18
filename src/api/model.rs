@@ -230,7 +230,7 @@ impl ModelDownloader<'_> {
 /// Downloads model metadata
 ///
 /// * `name` - Name of model
-/// * `team` - Team associated with model
+/// * `repository` - repository associated with model
 /// * `version` - Version of model
 /// * `uid` - uid of model
 /// * `url` - url of opsml server
@@ -260,7 +260,7 @@ pub async fn download_model_metadata(
 /// Downloads model file
 ///
 /// * `name` - Name of model
-/// * `team` - Team associated with model
+/// * `repository` - repository associated with model
 /// * `version` - Version of model
 /// * `uid` - uid of model
 /// * `url` - url of opsml server

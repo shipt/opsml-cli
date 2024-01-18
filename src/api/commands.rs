@@ -13,9 +13,9 @@ pub struct ListCards {
     #[arg(long = "name")]
     pub name: Option<String>,
 
-    /// Team name
-    #[arg(long = "team")]
-    pub team: Option<String>,
+    /// repository name
+    #[arg(long = "repository")]
+    pub repository: Option<String>,
 
     /// Card version
     #[arg(long = "version")]

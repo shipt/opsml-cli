@@ -20,7 +20,7 @@ fn main() -> Result<()> {
             list_cards(
                 args.registry.as_str(),
                 args.name.as_deref(),
-                args.team.as_deref(),
+                args.repository.as_deref(),
                 args.version.as_deref(),
                 args.uid.as_deref(),
                 args.limit,
