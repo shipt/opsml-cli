@@ -34,15 +34,15 @@ $ opsml-cli list-cards --registry model
 ```console
 # Download model only
 
-$ opsml-cli download-model --name {{model}} --repository opsml --version {{version}}  # name repository version
+$ opsml-cli download-model --name {{model}} --repository {{repository}} --version {{version}}  # name repository version
 $ opsml-cli download-model --uid {{uid}} # model from uid
 
 # Download onnx version of model
 
-$ opsml-cli download-model --name model --repository opsml --version 1.0.0  --onnx
+$ opsml-cli download-model --name model --repository {{repository}} --version 1.0.0  --onnx
 
 # Download model and preprocessor (if available)
-opsml-cli download-model --name model -- version 1.0.0 --repository opsml --onnx --preprocessor
+opsml-cli download-model --name model -- version 1.0.0 --repository {{repository}} --onnx --preprocessor
 ```
 
 ## Contributing
