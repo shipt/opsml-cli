@@ -2,7 +2,7 @@
     "cards": [
         {
             "name": "name",
-            "team": "team",
+            "repository": "repository",
             "date": "01/01/2023",
             "user_email": "devops@opsml.com",
             "version": "1.0.0",

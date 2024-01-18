@@ -20,7 +20,7 @@ fn main() -> Result<()> {
             list_cards(
                 args.registry.as_str(),
                 args.name.as_deref(),
-                args.team.as_deref(),
+                args.repository.as_deref(),
                 args.version.as_deref(),
                 args.uid.as_deref(),
                 args.limit,
@@ -39,6 +39,7 @@ fn main() -> Result<()> {
             download_model_metadata(
                 args.name.as_deref(),
                 args.version.as_deref(),
+                args.repository.as_deref(),
                 args.uid.as_deref(),
                 &args.write_dir,
                 &args.ignore_release_candidates,
@@ -57,6 +58,7 @@ fn main() -> Result<()> {
             download_model(
                 args.name.as_deref(),
                 args.version.as_deref(),
+                args.repository.as_deref(),
                 args.uid.as_deref(),
                 &args.write_dir,
                 &args.onnx,

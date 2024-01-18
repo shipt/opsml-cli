@@ -15,7 +15,7 @@ use tabled::{settings::Alignment, Table};
 struct CardLister<'a> {
     pub registry_type: &'a str,
     pub name: Option<&'a str>,
-    pub team: Option<&'a str>,
+    pub repository: Option<&'a str>,
     pub version: Option<&'a str>,
     pub uid: Option<&'a str>,
     pub limit: Option<&'a i16>,
@@ -66,7 +66,7 @@ impl CardLister<'_> {
         for card in cards.cards.iter() {
             card_table.push(types::CardTable {
                 name: card.name.clone(),
-                team: card.team.clone(),
+                repository: card.repository.clone(),
                 date: card.date.clone().unwrap_or("".to_string()),
                 user_email: card.user_email.clone(),
                 version: card.version.clone(),
@@ -112,13 +112,13 @@ impl CardLister<'_> {
     ///
     /// * `registry` - Registry to list cards from
     /// * `name` - Name of card
-    /// * `team` - Team name
+    /// * `repository` - repository name
     ///
     async fn make_card_request(&self) -> Result<Response, anyhow::Error> {
         let list_table_request = types::ListTableRequest {
             registry_type: self.registry_type,
             name: self.name,
-            team: self.team,
+            repository: self.repository,
             version: self.version,
             limit: self.limit,
             uid: self.uid,
@@ -141,7 +141,7 @@ impl CardLister<'_> {
     async fn get_cards(
         registry: &str,
         name: Option<&str>,
-        team: Option<&str>,
+        repository: Option<&str>,
         version: Option<&str>,
         uid: Option<&str>,
         limit: Option<i16>,
@@ -154,7 +154,7 @@ impl CardLister<'_> {
         let mut card_lister = CardLister {
             registry_type: registry,
             name,
-            team,
+            repository,
             version,
             uid,
             limit: limit.as_ref(),
@@ -191,7 +191,7 @@ impl CardLister<'_> {
 ///
 /// * `registry` - Registry to list cards from
 /// * `name` - Name of card
-/// * `team` - Team name
+/// * `repository` - repository name
 /// * `version` - Card version
 /// * `uid` - Card uid
 /// * `limit` - Limit number of cards returned
@@ -205,7 +205,7 @@ impl CardLister<'_> {
 pub async fn list_cards(
     registry: &str,
     name: Option<&str>,
-    team: Option<&str>,
+    repository: Option<&str>,
     version: Option<&str>,
     uid: Option<&str>,
     limit: Option<i16>,
@@ -217,7 +217,7 @@ pub async fn list_cards(
     CardLister::get_cards(
         registry,
         name,
-        team,
+        repository,
         version,
         uid,
         limit,
@@ -241,7 +241,7 @@ mod tests {
         let mut vec = Vec::new();
         let card = types::Card {
             name: "test".to_string(),
-            team: "test".to_string(),
+            repository: "test".to_string(),
             date: Some("test".to_string()),
             user_email: "fake_email".to_string(),
             version: "1.0.0".to_string(),
@@ -255,7 +255,7 @@ mod tests {
         let card_lister = CardLister {
             registry_type: "test",
             name: None,
-            team: None,
+            repository: None,
             version: None,
             uid: None,
             limit: None,
@@ -268,11 +268,11 @@ mod tests {
         assert_eq!(
             card_table.unwrap(),
             concat!(
-                "┌──────┬──────┬──────┬────────────┬─────────┬─────┐\n",
-                "│ name │ team │ date │ user_email │ version │ uid │\n",
-                "├──────┼──────┼──────┼────────────┼─────────┼─────┤\n",
-                "│ test │ test │ test │ fake_email │  1.0.0  │ uid │\n",
-                "└──────┴──────┴──────┴────────────┴─────────┴─────┘",
+                "┌──────┬────────────┬──────┬────────────┬─────────┬─────┐\n",
+                "│ name │ repository │ date │ user_email │ version │ uid │\n",
+                "├──────┼────────────┼──────┼────────────┼─────────┼─────┤\n",
+                "│ test │    test    │ test │ fake_email │  1.0.0  │ uid │\n",
+                "└──────┴────────────┴──────┴────────────┴─────────┴─────┘",
             )
         );
     }
