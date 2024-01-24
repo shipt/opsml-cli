@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use std::{fs, path::Path};
 use tokio;
 
-const MODEL_METADATA_FILE: &str = "metadata.json";
+const MODEL_METADATA_FILE: &str = "model-metadata.json";
 const NO_ONNX_URI: &str = "No onnx model uri found but onnx flag set to true";
 const NO_QUANTIZE_URI: &str = "No quantize model uri found but quantize flag set to true";
 
@@ -64,6 +64,7 @@ impl ModelDownloader<'_> {
 
         let model_metadata_request = types::ModelMetadataRequest {
             name: self.name,
+            repository: self.repository,
             version: self.version,
             uid: self.uid,
             ignore_release_candidates: self.ignore_release_candidates,
