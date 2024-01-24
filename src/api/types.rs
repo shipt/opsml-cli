@@ -30,6 +30,7 @@ pub struct CardRequest<'a> {
 pub struct ModelMetadataRequest<'a> {
     pub name: Option<&'a str>,
     pub version: Option<&'a str>,
+    pub repository: Option<&'a str>,
     pub uid: Option<&'a str>,
     pub ignore_release_candidates: &'a bool,
 }

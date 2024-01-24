@@ -206,6 +206,7 @@ mod tests {
             name: Some("name"),
             version: Some("version"),
             uid: Some("uid"),
+            repository: Some("repository"),
             ignore_release_candidates: &false,
         };
 
