@@ -3,25 +3,23 @@ name = "opsml-cli"
 version = "0.4.2"
 description = "Rust-based CLI for interacting with OpsML"
 readme = "README.md"
-authors = [
-    { name = 'Steven Forrester', email = 'steven.forrester@shipt.com' }
-]
+authors = [{ name = 'Steven Forrester', email = 'steven.forrester@shipt.com' }]
 
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = ">=3.9,<3.13"
 
 [build-system]
 requires = ["maturin>=1.2,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]
-bindings = "bin" 
-strip = true 
+bindings = "bin"
+strip = true
 
 [project]
 name = "opsml-cli"
-requires-python = ">=3.9,<3.12"
+requires-python = ">=3.9,<3.13"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
