@@ -1,13 +1,15 @@
 [tool.poetry]
 name = "opsml-cli"
-version = "0.4.2"
+version = "0.4.3"
 description = "Rust-based CLI for interacting with OpsML"
 readme = "README.md"
-authors = [{ name = 'Steven Forrester', email = 'steven.forrester@shipt.com' }]
-
+authors = ["Steven Forrester <steven.forrester@shipt.com>"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
+
+[tool.poetry.group.dev.dependencies]
+maturin = "^1.4.0"
 
 [build-system]
 requires = ["maturin>=1.2,<2.0"]
@@ -19,6 +21,7 @@ strip = true
 
 [project]
 name = "opsml-cli"
+authors = [{ name = 'Steven Forrester', email = 'steven.forrester@shipt.com' }]
 requires-python = ">=3.9,<3.13"
 classifiers = [
     "Programming Language :: Rust",
