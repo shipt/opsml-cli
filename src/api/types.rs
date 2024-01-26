@@ -40,7 +40,7 @@ pub struct Card {
     pub name: String,
     pub repository: String,
     pub date: Option<String>,
-    pub user_email: String,
+    pub contact: String,
     pub version: String,
     pub uid: String,
     pub tags: HashMap<String, String>,
@@ -92,7 +92,7 @@ pub struct CardTable {
     pub name: String,
     pub repository: String,
     pub date: String,
-    pub user_email: String,
+    pub contact: String,
     pub version: String,
     pub uid: String,
 }
