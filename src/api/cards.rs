@@ -68,7 +68,7 @@ impl CardLister<'_> {
                 name: card.name.clone(),
                 repository: card.repository.clone(),
                 date: card.date.clone().unwrap_or("".to_string()),
-                user_email: card.user_email.clone(),
+                contact: card.contact.clone(),
                 version: card.version.clone(),
                 uid: card.uid.clone(),
             });
@@ -243,7 +243,7 @@ mod tests {
             name: "test".to_string(),
             repository: "test".to_string(),
             date: Some("test".to_string()),
-            user_email: "fake_email".to_string(),
+            contact: "fake_email".to_string(),
             version: "1.0.0".to_string(),
             uid: "uid".to_string(),
             tags: HashMap::new(),
@@ -269,7 +269,7 @@ mod tests {
             card_table.unwrap(),
             concat!(
                 "┌──────┬────────────┬──────┬────────────┬─────────┬─────┐\n",
-                "│ name │ repository │ date │ user_email │ version │ uid │\n",
+                "│ name │ repository │ date │  contact   │ version │ uid │\n",
                 "├──────┼────────────┼──────┼────────────┼─────────┼─────┤\n",
                 "│ test │    test    │ test │ fake_email │  1.0.0  │ uid │\n",
                 "└──────┴────────────┴──────┴────────────┴─────────┴─────┘",
