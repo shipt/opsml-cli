@@ -117,7 +117,9 @@ pub struct DataSchema {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ModelMetadata {
     pub model_name: String,
+    pub model_class: String,
     pub model_type: String,
+    pub model_interface: String,
     pub onnx_uri: Option<String>,
     pub onnx_version: Option<String>,
     pub model_uri: String,

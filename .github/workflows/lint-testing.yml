@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 env:
-  RUSTFLAGS: -C debuginfo=0  # Do not produce debug symbols to keep memory usage down
+  RUSTFLAGS: -C debuginfo=0 # Do not produce debug symbols to keep memory usage down
 
 jobs:
   test-leaks:
@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-            fetch-depth: 0
+          fetch-depth: 0
 
       - name: Gitleaks
         uses: gitleaks/gitleaks-action@v2
@@ -77,7 +77,7 @@ jobs:
       - name: set up python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - run: pip install -U twine
 
@@ -89,7 +89,8 @@ jobs:
           args: --release --out dist --interpreter 3.11
           rust-toolchain: stable
           docker-options: -e CI
-          before-script-linux: | # ref: https://github.com/sfackler/rust-openssl/issues/2036#issuecomment-1724324145
+          before-script-linux:
+            | # ref: https://github.com/sfackler/rust-openssl/issues/2036#issuecomment-1724324145
             # If we're running on rhel centos, install needed packages.
             if command -v yum &> /dev/null; then
                 yum update -y && yum install -y perl-core openssl openssl-devel pkgconfig libatomic
