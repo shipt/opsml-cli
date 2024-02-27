@@ -6,7 +6,7 @@ addAssignees: false
 
 # A list of reviewers to be added to pull requests (GitHub user name)
 reviewers:
-  - shipt/data-devops
+  - shipt/ml-platform
   - thorrester
 
 # A number of reviewers added to the pull request
